@@ -412,6 +412,34 @@ export const en = {
   recordStatusCompanion: "Companion requested",
   recordStatusCompleted: "Visit assistance completed",
   errorGeneric: "Something went wrong. Please try again.",
+  orderCount: "{count} orders",
+  noTranslationRecord: "No translation conversation was recorded for this visit.",
+  noCompanionRecord: "No human companion was used for this visit.",
+  noFeeRecord: "No companion service fee was recorded for this visit.",
+  patientSpeaker: "Patient",
+  staffSpeaker: "Hospital staff",
+  orderStatus: "Order status",
+  orderNumber: "Order number",
+  paymentStatus: "Payment status",
+  paymentPaid: "Paid in full",
+  paymentDepositOnly: "Deposit paid · balance outstanding",
+  paymentUnpaid: "Unpaid",
+  entryCount: "{count} entries",
+  exportRecord: "Export record",
+  deleteRecord: "Delete record",
+  deleteRecordConfirm: "Permanently delete the visit record for {hospital}? Linked safety recordings will also be deleted. This cannot be undone.",
+  deleting: "Deleting…",
+  deletePermanently: "Delete permanently",
+  ordersDesc: "View each companion order and continue any service that is still active.",
+  resumeOrder: "Continue order",
+  noOrders: "No companion orders yet.",
+  orderRequested: "Waiting for confirmation",
+  orderAccepted: "Accepted · deposit required",
+  orderDepositPaid: "Deposit paid · waiting for arrival",
+  orderArrived: "Companion arrived",
+  orderInService: "Service in progress",
+  orderCompleted: "Completed",
+  orderCancelled: "Cancelled",
 };
 
 type Messages = typeof en;
@@ -439,6 +467,7 @@ const zh: Messages = {
   profileTitle: "我的", account: "账号 ID：{id}", editProfile: "编辑个人资料", accountServices: "账户与服务", myMedicalCard: "我的就诊卡", visitRecords: "就诊记录", companionOrders: "真人陪诊订单", completedCount: "{count} 个已完成", paymentMethods: "支付方式", notLinked: "暂未绑定", languageSettings: "语言设置", privacySecurity: "隐私与安全", passwordData: "密码与数据管理", privacyPromise: "隐私承诺", privacyPromiseDesc: "可随时查看、修改或删除您的就诊数据。", logout: "退出登录",
   recordsTitle: "就诊记录", recordsDesc: "每次就诊都会自动整理", recordsSub: "医院、翻译、陪诊、录音和费用记录集中保存，并由您决定是否保留。", translationRecord: "翻译记录", companionRecord: "陪诊记录", feeRecord: "费用明细", viewFullRecord: "查看完整记录", recordManaged: "记录由您管理", exportDelete: "可随时导出或永久删除。", noRecords: "暂时没有就诊记录。",
   close: "关闭", back: "返回", cancel: "取消", confirm: "确认", save: "保存", loading: "加载中…", retry: "重试", demoMode: "离线演示模式", currentSymptoms: "当前症状", symptomsHelp: "请描述现在的感觉、开始时间和可能诱因", symptomsAutoFill: "您在与 Naru 对话中描述症状时，这里也会自动更新。", locationAccuracy: "GPS 精度 {accuracy}", returnHospitals: "返回附近医院继续选择", simulateAccepted: "演示：陪诊师已接受", finishVisitAssistance: "结束本次就诊帮助", recordStatusSearching: "正在寻找医院", recordStatusHospitalSelected: "已选择医院", recordStatusNavigating: "正在前往医院", recordStatusArrived: "已到院 · 可使用翻译", recordStatusCompanion: "已申请真人陪诊", recordStatusCompleted: "本次就诊帮助已完成", errorGeneric: "出现问题，请重试。",
+  orderCount: "{count} 个订单", noTranslationRecord: "本次就诊没有产生翻译对话记录。", noCompanionRecord: "本次就诊没有使用真人陪诊服务。", noFeeRecord: "本次就诊没有产生陪诊服务费用。", patientSpeaker: "患者", staffSpeaker: "医院人员", orderStatus: "订单状态", orderNumber: "订单编号", paymentStatus: "付款状态", paymentPaid: "已全部付清", paymentDepositOnly: "已付定金 · 余款待支付", paymentUnpaid: "尚未付款", entryCount: "{count} 条", exportRecord: "导出记录", deleteRecord: "删除记录", deleteRecordConfirm: "确定要永久删除 {hospital} 的本次就诊记录吗？关联的安全录音也会一并删除，删除后无法恢复。", deleting: "正在删除…", deletePermanently: "永久删除", ordersDesc: "查看每一笔真人陪诊订单，并可继续尚未结束的服务。", resumeOrder: "继续订单", noOrders: "暂时没有真人陪诊订单。", orderRequested: "等待陪诊师确认", orderAccepted: "已接受 · 待支付定金", orderDepositPaid: "已付定金 · 等待到达", orderArrived: "陪诊师已到达", orderInService: "服务进行中", orderCompleted: "已完成", orderCancelled: "已取消",
 };
 
 // These packs contain reviewed overrides only. Generated locale copy fills the

@@ -5,7 +5,7 @@ import { Button, InfoBanner, InteractiveMap, NaruPose, Panel, StatusPill } from 
 import { evaluateOpeningHours, formatRestDays } from "../hospitalHours";
 import { localeOptions, useI18n } from "../i18n";
 import { isLikelySymptomDescription } from "../symptoms";
-import type { Hospital, LocationState, MedicalCard } from "../types";
+import type { Hospital, LocationState, MedicalCard, TranslationRecordEntry } from "../types";
 
 interface Message { id: string; role: "naru" | "user" | "status"; text: string }
 
@@ -194,7 +194,7 @@ interface SpeechRecognitionResultEventLike extends Event { results: { [index: nu
 interface SpeechRecognitionErrorEventLike extends Event { error?: string; }
 interface SpeechRecognitionLike { lang: string; continuous: boolean; interimResults: boolean; start(): void; stop(): void; abort(): void; onresult: ((event: SpeechRecognitionResultEventLike) => void) | null; onend: (() => void) | null; onerror: ((event: SpeechRecognitionErrorEventLike) => void) | null; }
 
-export function TranslationPage({ userLanguage, active = true, onComplete }: { userLanguage?: string; active?: boolean; onComplete?: () => void }) {
+export function TranslationPage({ userLanguage, active = true, onRecorded, onComplete }: { userLanguage?: string; active?: boolean; onRecorded?: (entry: TranslationRecordEntry) => void; onComplete?: () => void }) {
   const { locale, t } = useI18n();
   const language = userLanguage || locale;
   const languageOption = localeOptions.find((item) => item.code === language) || localeOptions.find((item) => item.code === locale) || localeOptions[0];
@@ -217,8 +217,17 @@ export function TranslationPage({ userLanguage, active = true, onComplete }: { u
     if (!input.trim()) return;
     setBusy(true);
     try {
-      if (speaker === "patient") { setPatientText(input); setPatientKo(await api.translate(input, language, "ko")); }
-      else { setStaffKo(input); setStaffText(await api.translate(input, "ko", language)); }
+      if (speaker === "patient") {
+        const sourceText = input.trim();
+        const translatedText = await api.translate(sourceText, language, "ko");
+        setPatientText(sourceText); setPatientKo(translatedText);
+        onRecorded?.({ speaker, sourceText, translatedText, sourceLanguage: language, targetLanguage: "ko", timestamp: new Date().toISOString() });
+      } else {
+        const sourceText = input.trim();
+        const translatedText = await api.translate(sourceText, "ko", language);
+        setStaffKo(sourceText); setStaffText(translatedText);
+        onRecorded?.({ speaker, sourceText, translatedText, sourceLanguage: "ko", targetLanguage: language, timestamp: new Date().toISOString() });
+      }
       setInput("");
     } catch { setVoiceError(t("errorGeneric")); }
     finally { setBusy(false); }

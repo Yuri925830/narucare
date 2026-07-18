@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { BadgeCheck, Languages, LocateFixed, ShieldCheck } from "lucide-react";
 import { api } from "../api";
 import { Button, InfoBanner, NaruPose, Panel } from "../components";
@@ -35,6 +35,7 @@ export function MedicalCardPage({ card, onSaved }: { card: MedicalCard | null; o
   const [locationError, setLocationError] = useState("");
   const [saved, setSaved] = useState(Boolean(card));
   const [error, setError] = useState("");
+  const addressEdited = useRef(Boolean(card?.address));
 
   useEffect(() => {
     if (card) { setForm({ ...emptyCard(card.language || locale), ...card }); setSaved(true); }
@@ -57,16 +58,16 @@ export function MedicalCardPage({ card, onSaved }: { card: MedicalCard | null; o
     { key: "language" as const, label: t("primaryLanguage"), options: localeOptions.map((item) => [item.code, item.nativeName]) },
   ], [t]);
 
-  const locateAddress = useCallback(async () => {
+  const locateAddress = useCallback(async (forceAddressUpdate = false) => {
     setLocationError("");
     if (!navigator.geolocation) { setLocationError(t("locationDenied")); return; }
     setLocating(true);
     try {
-      const point = await requestPreciseLocation(navigator.geolocation, { targetAccuracyMeters: 20, hardTimeoutMs: 15_000 });
+      const point = await requestPreciseLocation(navigator.geolocation, { targetAccuracyMeters: 10, hardTimeoutMs: 25_000, minimumObservationMs: 2_500 });
       const address = await api.reverseGeocode(point.lat, point.lng);
       setForm((current) => ({
         ...current,
-        address,
+        address: forceAddressUpdate || !addressEdited.current ? address : current.address,
         latitude: point.lat,
         longitude: point.lng,
         locationAccuracy: point.accuracy,
@@ -75,7 +76,7 @@ export function MedicalCardPage({ card, onSaved }: { card: MedicalCard | null; o
     finally { setLocating(false); }
   }, [t]);
 
-  useEffect(() => { if (!card?.address) void locateAddress(); }, []);
+  useEffect(() => { if (!card?.address) void locateAddress(false); }, []);
 
   function localKoreanValue(key: CardField, value: string) {
     const common: Record<string, string> = {
@@ -119,8 +120,8 @@ export function MedicalCardPage({ card, onSaved }: { card: MedicalCard | null; o
             <option value="">— {t("nationality")} —</option>
             {legacyCountry && <option value={legacyCountry}>{legacyCountry}</option>}
             {countryOptions.map((country) => <option key={country.code} value={country.code}>{country.flag} {country.nativeName}</option>)}
-          </select> : options ? <select value={value} onChange={(event) => setForm({ ...form, [key]: event.target.value })}>{options.map(([optionValue, label]) => <option key={optionValue} value={optionValue}>{label}</option>)}</select> : "multiline" in field && field.multiline ? <textarea dir="auto" value={value} onChange={(event) => setForm({ ...form, [key]: event.target.value })} placeholder={("placeholder" in field && field.placeholder) || ""} required={"required" in field && field.required} /> : <input dir="auto" type={("type" in field && field.type) || "text"} min={key === "age" ? 0 : undefined} max={key === "age" ? 120 : undefined} value={value} onChange={(event) => setForm({ ...form, [key]: event.target.value })} placeholder={("placeholder" in field && field.placeholder) || ""} required={"required" in field && field.required} />}
-          {key === "address" && <><Button type="button" variant="secondary" className="locate-address" onClick={() => void locateAddress()} disabled={locating}><LocateFixed size={16} />{locating ? t("locating") : t("useCurrentLocation")}</Button><small className="address-help">{t("addressHelp")}{form.locationAccuracy ? ` · ${t("locationAccuracy", { accuracy: formatAccuracy(form.locationAccuracy) })}` : ""}</small>{locationError && <small className="form-error" role="alert">{locationError}</small>}</>}
+          </select> : options ? <select value={value} onChange={(event) => setForm({ ...form, [key]: event.target.value })}>{options.map(([optionValue, label]) => <option key={optionValue} value={optionValue}>{label}</option>)}</select> : "multiline" in field && field.multiline ? <textarea dir="auto" value={value} onChange={(event) => { if (key === "address") addressEdited.current = true; setForm({ ...form, [key]: event.target.value }); }} placeholder={("placeholder" in field && field.placeholder) || ""} required={"required" in field && field.required} /> : <input dir="auto" type={("type" in field && field.type) || "text"} min={key === "age" ? 0 : undefined} max={key === "age" ? 120 : undefined} value={value} onChange={(event) => setForm({ ...form, [key]: event.target.value })} placeholder={("placeholder" in field && field.placeholder) || ""} required={"required" in field && field.required} />}
+          {key === "address" && <><Button type="button" variant="secondary" className="locate-address" onClick={() => { addressEdited.current = false; void locateAddress(true); }} disabled={locating}><LocateFixed size={16} />{locating ? t("locating") : t("useCurrentLocation")}</Button><small className="address-help">{t("addressHelp")}{form.locationAccuracy ? ` · ${t("locationAccuracy", { accuracy: formatAccuracy(form.locationAccuracy) })}` : ""}</small>{locationError && <small className="form-error" role="alert">{locationError}</small>}</>}
           {key === "symptoms" && <small className="address-help">{t("symptomsAutoFill")}</small>}
           {saved && <small className="korean-preview"><BadgeCheck size={13} />{form.korean?.[key] || localKoreanValue(key, value)}</small>}
         </label>;

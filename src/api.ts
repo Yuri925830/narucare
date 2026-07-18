@@ -1,10 +1,11 @@
 import { companions, fallbackHospitals, matchCompanions } from "./data";
-import type { Companion, CompanionFilters, CompanionOrder, Hospital, MedicalCard, SessionUser, VisitRecord } from "./types";
+import type { Companion, CompanionFilters, CompanionOrder, Hospital, MedicalCard, SessionUser, TranslationRecordEntry, VisitRecord } from "./types";
 
 const API_BASE = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
 const TOKEN_KEY = "narucare-session";
 const DEMO_USERS_KEY = "narucare-demo-users";
 const DEMO_RECORDS_KEY = "narucare-demo-records";
+const DEMO_ORDERS_KEY = "narucare-demo-orders";
 
 interface ApiErrorPayload { error?: string; message?: string }
 
@@ -49,6 +50,10 @@ function demoSession(id: string) {
 function demoCurrentId() {
   const value = token();
   return value?.startsWith("demo:") ? value.slice(5) : null;
+}
+
+function demoUserStorageKey(base: string) {
+  return `${base}:${demoCurrentId() || "anonymous"}`;
 }
 
 function allowDemo(error: unknown) {
@@ -188,14 +193,38 @@ export const api = {
     } catch { return matchCompanions(filters); }
   },
   async createOrder(order: Omit<CompanionOrder, "id">): Promise<CompanionOrder> {
-    if (demoCurrentId()) return { ...order, id: crypto.randomUUID() };
-    try { return await request<CompanionOrder>("/api/orders", { method: "POST", body: JSON.stringify(order) }); }
-    catch { return { ...order, id: crypto.randomUUID() }; }
+    if (demoCurrentId()) {
+      const created = { ...order, id: crypto.randomUUID(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+      const key = demoUserStorageKey(DEMO_ORDERS_KEY);
+      const orders = JSON.parse(localStorage.getItem(key) || "[]") as CompanionOrder[];
+      localStorage.setItem(key, JSON.stringify([created, ...orders]));
+      return created;
+    }
+    return request<CompanionOrder>("/api/orders", { method: "POST", body: JSON.stringify(order) });
   },
   async updateOrder(id: string, status: CompanionOrder["status"], extra: Record<string, unknown> = {}) {
-    if (demoCurrentId()) return { ok: true };
+    if (demoCurrentId()) {
+      const key = demoUserStorageKey(DEMO_ORDERS_KEY);
+      const orders = JSON.parse(localStorage.getItem(key) || "[]") as CompanionOrder[];
+      const updated = orders.map((order) => order.id === id ? {
+        ...order,
+        status,
+        ...(typeof extra.paymentMethod === "string" ? { paymentMethod: extra.paymentMethod } : {}),
+        ...(extra.balancePaid === true ? { balancePaid: true } : {}),
+        ...(typeof extra.rating === "number" ? { rating: extra.rating } : {}),
+        ...(typeof extra.review === "string" ? { review: extra.review } : {}),
+        updatedAt: new Date().toISOString(),
+      } : order);
+      localStorage.setItem(key, JSON.stringify(updated));
+      return { ok: true };
+    }
     try { return await request<{ ok: boolean }>(`/api/orders/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify({ status, ...extra }) }); }
     catch { return { ok: false }; }
+  },
+  async orders(): Promise<CompanionOrder[]> {
+    if (demoCurrentId()) return JSON.parse(localStorage.getItem(demoUserStorageKey(DEMO_ORDERS_KEY)) || "[]") as CompanionOrder[];
+    try { return (await request<{ orders: CompanionOrder[] }>("/api/orders")).orders; }
+    catch { return []; }
   },
   async uploadRecording(orderId: string, chunk: Blob, index: number) {
     if (demoCurrentId()) return { stored: false, local: true };
@@ -208,8 +237,9 @@ export const api = {
   async addRecord(record: Omit<VisitRecord, "id">): Promise<VisitRecord> {
     const complete = { ...record, id: crypto.randomUUID() };
     if (demoCurrentId()) {
-      const records = JSON.parse(localStorage.getItem(DEMO_RECORDS_KEY) || "[]") as VisitRecord[];
-      localStorage.setItem(DEMO_RECORDS_KEY, JSON.stringify([complete, ...records]));
+      const key = demoUserStorageKey(DEMO_RECORDS_KEY);
+      const records = JSON.parse(localStorage.getItem(key) || "[]") as VisitRecord[];
+      localStorage.setItem(key, JSON.stringify([complete, ...records]));
       return complete;
     }
     try { return await request<VisitRecord>("/api/records", { method: "POST", body: JSON.stringify(record) }); }
@@ -217,16 +247,45 @@ export const api = {
   },
   async updateRecord(id: string, patch: Partial<Omit<VisitRecord, "id">>) {
     if (demoCurrentId()) {
-      const records = JSON.parse(localStorage.getItem(DEMO_RECORDS_KEY) || "[]") as VisitRecord[];
-      const updated = records.map((record) => record.id === id ? { ...record, ...patch } : record);
-      localStorage.setItem(DEMO_RECORDS_KEY, JSON.stringify(updated));
+      const key = demoUserStorageKey(DEMO_RECORDS_KEY);
+      const records = JSON.parse(localStorage.getItem(key) || "[]") as VisitRecord[];
+      const updated = records.map((record) => record.id === id ? {
+        ...record,
+        ...patch,
+        ...(patch.details ? { details: { ...record.details, ...patch.details } } : {}),
+      } : record);
+      localStorage.setItem(key, JSON.stringify(updated));
       return updated.find((record) => record.id === id) || null;
     }
     try { return await request<VisitRecord>(`/api/records/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(patch) }); }
     catch { return null; }
   },
+  async appendRecordTranslation(id: string, entry: TranslationRecordEntry) {
+    if (demoCurrentId()) {
+      const key = demoUserStorageKey(DEMO_RECORDS_KEY);
+      const records = JSON.parse(localStorage.getItem(key) || "[]") as VisitRecord[];
+      const updated = records.map((record) => record.id === id ? {
+        ...record,
+        details: { ...record.details, translations: [...(record.details?.translations || []), entry].slice(-100) },
+      } : record);
+      localStorage.setItem(key, JSON.stringify(updated));
+      return updated.find((record) => record.id === id) || null;
+    }
+    try { return await request<VisitRecord>(`/api/records/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify({ appendTranslation: entry }) }); }
+    catch { return null; }
+  },
+  async deleteRecord(id: string) {
+    if (demoCurrentId()) {
+      const key = demoUserStorageKey(DEMO_RECORDS_KEY);
+      const records = JSON.parse(localStorage.getItem(key) || "[]") as VisitRecord[];
+      localStorage.setItem(key, JSON.stringify(records.filter((record) => record.id !== id)));
+      return true;
+    }
+    try { await request<{ ok: boolean }>(`/api/records/${encodeURIComponent(id)}`, { method: "DELETE" }); return true; }
+    catch { return false; }
+  },
   async records(): Promise<VisitRecord[]> {
-    if (demoCurrentId()) return JSON.parse(localStorage.getItem(DEMO_RECORDS_KEY) || "[]");
+    if (demoCurrentId()) return JSON.parse(localStorage.getItem(demoUserStorageKey(DEMO_RECORDS_KEY)) || "[]");
     try { return (await request<{ records: VisitRecord[] }>("/api/records")).records; }
     catch { return []; }
   },

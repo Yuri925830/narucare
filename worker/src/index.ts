@@ -63,6 +63,30 @@ interface CompanionPayload {
   match: number;
 }
 
+interface CompanionOrderRow extends CompanionRow {
+  order_id: string;
+  hospital_json: string | null;
+  status: string;
+  duration_minutes: number;
+  deposit: number;
+  payment_method: string;
+  balance_paid: number;
+  order_rating: number | null;
+  order_review: string | null;
+  order_created_at: string;
+  order_updated_at: string;
+}
+
+interface VisitRecordRow {
+  id: string;
+  hospital: string;
+  department: string;
+  symptoms: string;
+  date: string;
+  status: string;
+  details_json: string;
+}
+
 interface HospitalPayload {
   id: string;
   name: string;
@@ -87,7 +111,7 @@ function corsHeaders(request: Request, env: Env) {
   const githubPages = env.ALLOW_GITHUB_PAGES === "true" && /^https:\/\/[a-z0-9-]+\.github\.io$/i.test(origin);
   const allowedOrigin = explicitlyAllowed || githubPages ? origin : "";
   const headers = new Headers({
-    "access-control-allow-methods": "GET,POST,PUT,PATCH,OPTIONS",
+    "access-control-allow-methods": "GET,POST,PUT,PATCH,DELETE,OPTIONS",
     "access-control-allow-headers": "authorization,content-type",
     "access-control-max-age": "86400",
     "vary": "Origin",
@@ -381,13 +405,32 @@ async function nearbyHospitals(url: URL) {
 
 async function reverseGeocode(url: URL) {
   const { lat, lng } = coordinates(url);
+  const cache = caches.default;
+  const cacheKey = new Request(`https://narucare.internal/location/reverse?lat=${lat.toFixed(5)}&lng=${lng.toFixed(5)}`);
+  const cached = await cache.match(cacheKey);
+  if (cached) return cached;
   const endpoint = new URL("https://nominatim.openstreetmap.org/reverse");
-  endpoint.search = new URLSearchParams({ lat: String(lat), lon: String(lng), format: "jsonv2", "accept-language": "ko,en", zoom: "18" }).toString();
-  const response = await fetch(endpoint, { headers: { "user-agent": "NaruCare/1.0 (medical navigation prototype)", accept: "application/json" } });
+  endpoint.search = new URLSearchParams({ lat: String(lat), lon: String(lng), format: "jsonv2", "accept-language": "ko,en", zoom: "18", addressdetails: "1", namedetails: "1" }).toString();
+  const response = await fetch(endpoint, { headers: { "user-agent": "NaruCare/1.0 (medical navigation prototype)", accept: "application/json" }, signal: AbortSignal.timeout(10_000) });
   if (!response.ok) throw new ApiException(502, "geocode_provider_error", "Geocoding unavailable");
   const value: unknown = await response.json();
-  const address = value && typeof value === "object" && "display_name" in value && typeof value.display_name === "string" ? value.display_name : `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
-  return json({ address });
+  const valueObject = value && typeof value === "object" ? value as Record<string, unknown> : {};
+  const addressObject = valueObject.address && typeof valueObject.address === "object" ? valueObject.address as Record<string, unknown> : {};
+  const stringPart = (key: string) => typeof addressObject[key] === "string" ? addressObject[key] as string : "";
+  const road = stringPart("road") || stringPart("pedestrian") || stringPart("residential") || stringPart("footway");
+  const houseNumber = stringPart("house_number");
+  const detailedRoadAddress = [
+    stringPart("state") || stringPart("city"),
+    stringPart("borough") || stringPart("city_district") || stringPart("county"),
+    road && houseNumber ? `${road} ${houseNumber}` : road,
+    stringPart("building"),
+  ].filter(Boolean).filter((part, index, parts) => parts.indexOf(part) === index).join(" ");
+  const displayName = typeof valueObject.display_name === "string" ? valueObject.display_name : "";
+  const address = detailedRoadAddress || displayName || `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+  const result = json({ address, coordinates: { lat, lng } });
+  result.headers.set("cache-control", "public, max-age=300");
+  await cache.put(cacheKey, result.clone());
+  return result;
 }
 
 interface OsrmResponse { routes?: Array<{ distance: number; duration: number; geometry?: { coordinates?: Array<[number, number]> } }> }
@@ -573,6 +616,47 @@ async function updateOrder(request: Request, env: Env, orderId: string) {
   return json({ ok: true });
 }
 
+function parseJsonObject(value: string | null): Record<string, unknown> | null {
+  if (!value) return null;
+  try {
+    const parsed: unknown = JSON.parse(value);
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed as Record<string, unknown> : null;
+  } catch { return null; }
+}
+
+function toCompanionOrder(row: CompanionOrderRow) {
+  return {
+    id: row.order_id,
+    companion: toCompanion(row),
+    hospital: parseJsonObject(row.hospital_json),
+    status: row.status,
+    durationMinutes: row.duration_minutes,
+    deposit: row.deposit,
+    paymentMethod: row.payment_method,
+    balancePaid: row.balance_paid === 1,
+    rating: row.order_rating,
+    review: row.order_review || "",
+    createdAt: row.order_created_at,
+    updatedAt: row.order_updated_at,
+  };
+}
+
+async function listOrders(request: Request, env: Env) {
+  const userId = await requireUser(request, env);
+  const result = await env.DB.prepare(`
+    SELECT
+      o.id AS order_id,o.hospital_json,o.status,o.duration_minutes,o.deposit,o.payment_method,
+      o.balance_paid,o.rating AS order_rating,o.review AS order_review,o.created_at AS order_created_at,o.updated_at AS order_updated_at,
+      c.id,c.name,c.native_name,c.gender,c.nationality,c.age,c.languages_json,c.rating,c.review_count,c.price,c.eta,c.hospitals_json,c.experience
+    FROM companion_orders o
+    JOIN companions c ON c.id=o.companion_id
+    WHERE o.user_id=?
+    ORDER BY o.created_at DESC
+    LIMIT 100
+  `).bind(userId).all<CompanionOrderRow>();
+  return json({ orders: result.results.map(toCompanionOrder) });
+}
+
 async function uploadRecording(request: Request, env: Env, orderId: string, index: number) {
   const userId = await requireUser(request, env);
   if (!Number.isSafeInteger(index) || index < 0 || index > 100_000) throw new ApiException(400, "invalid_chunk_index", "Invalid recording chunk index");
@@ -590,30 +674,87 @@ async function uploadRecording(request: Request, env: Env, orderId: string, inde
   return json({ stored: true });
 }
 
+function sanitizeRecordDetails(value: unknown): Record<string, unknown> {
+  if (value === undefined || value === null) return {};
+  if (typeof value !== "object" || Array.isArray(value)) throw new ApiException(400, "invalid_record_details", "Record details must be an object");
+  const serialized = JSON.stringify(value);
+  if (new TextEncoder().encode(serialized).byteLength > 60_000) throw new ApiException(413, "record_details_too_large", "Record details are too large");
+  return JSON.parse(serialized) as Record<string, unknown>;
+}
+
+function parseRecordDetails(value: string): Record<string, unknown> {
+  try { return sanitizeRecordDetails(JSON.parse(value)); } catch { return {}; }
+}
+
+function serializeVisitRecord(row: VisitRecordRow) {
+  return { id: row.id, hospital: row.hospital, department: row.department, symptoms: row.symptoms, date: row.date, status: row.status, details: parseRecordDetails(row.details_json) };
+}
+
+function sanitizeTranslationEntry(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new ApiException(400, "invalid_translation_entry", "Translation entry is invalid");
+  const entry = value as Record<string, unknown>;
+  const speaker = entry.speaker === "staff" ? "staff" : entry.speaker === "patient" ? "patient" : null;
+  if (!speaker) throw new ApiException(400, "invalid_translation_speaker", "Translation speaker is invalid");
+  return {
+    speaker,
+    sourceText: assertString(entry.sourceText, "sourceText", 1, 4_000),
+    translatedText: assertString(entry.translatedText, "translatedText", 1, 4_000),
+    sourceLanguage: assertString(entry.sourceLanguage, "sourceLanguage", 2, 20),
+    targetLanguage: assertString(entry.targetLanguage, "targetLanguage", 2, 20),
+    timestamp: typeof entry.timestamp === "string" && entry.timestamp.length <= 40 ? entry.timestamp : new Date().toISOString(),
+  };
+}
+
 async function createRecord(request: Request, env: Env) {
   const userId = await requireUser(request, env); const body = await readJson(request); const id = crypto.randomUUID();
   const hospital = assertString(body.hospital, "hospital", 1, 200); const department = assertString(body.department, "department", 1, 200); const symptoms = assertString(body.symptoms, "symptoms", 1, 1_000); const date = assertString(body.date, "date", 4, 30); const status = assertString(body.status, "status", 1, 100);
-  await env.DB.prepare("INSERT INTO visit_records (id,user_id,hospital,department,symptoms,visit_date,status) VALUES (?,?,?,?,?,?,?)").bind(id, userId, hospital, department, symptoms, date, status).run();
-  return json({ id, hospital, department, symptoms, date, status }, 201);
+  const details = sanitizeRecordDetails(body.details);
+  await env.DB.prepare("INSERT INTO visit_records (id,user_id,hospital,department,symptoms,visit_date,status,details_json) VALUES (?,?,?,?,?,?,?,?)").bind(id, userId, hospital, department, symptoms, date, status, JSON.stringify(details)).run();
+  return json({ id, hospital, department, symptoms, date, status, details }, 201);
 }
 
 async function listRecords(request: Request, env: Env) {
   const userId = await requireUser(request, env);
-  const result = await env.DB.prepare("SELECT id,hospital,department,symptoms,visit_date AS date,status FROM visit_records WHERE user_id=? ORDER BY created_at DESC LIMIT 100").bind(userId).all<{ id: string; hospital: string; department: string; symptoms: string; date: string; status: string }>();
-  return json({ records: result.results });
+  const result = await env.DB.prepare("SELECT id,hospital,department,symptoms,visit_date AS date,status,details_json FROM visit_records WHERE user_id=? ORDER BY created_at DESC LIMIT 100").bind(userId).all<VisitRecordRow>();
+  return json({ records: result.results.map(serializeVisitRecord) });
 }
 
 async function updateRecord(request: Request, env: Env, recordId: string) {
   const userId = await requireUser(request, env); const body = await readJson(request);
-  const current = await env.DB.prepare("SELECT id,hospital,department,symptoms,visit_date AS date,status FROM visit_records WHERE id=? AND user_id=?").bind(recordId, userId).first<{ id: string; hospital: string; department: string; symptoms: string; date: string; status: string }>();
+  const current = await env.DB.prepare("SELECT id,hospital,department,symptoms,visit_date AS date,status,details_json FROM visit_records WHERE id=? AND user_id=?").bind(recordId, userId).first<VisitRecordRow>();
   if (!current) throw new ApiException(404, "record_not_found", "Visit record not found");
   const hospital = body.hospital === undefined ? current.hospital : assertString(body.hospital, "hospital", 1, 200);
   const department = body.department === undefined ? current.department : assertString(body.department, "department", 1, 200);
   const symptoms = body.symptoms === undefined ? current.symptoms : assertString(body.symptoms, "symptoms", 1, 1_000);
   const date = body.date === undefined ? current.date : assertString(body.date, "date", 4, 30);
   const status = body.status === undefined ? current.status : assertString(body.status, "status", 1, 100);
-  await env.DB.prepare("UPDATE visit_records SET hospital=?,department=?,symptoms=?,visit_date=?,status=? WHERE id=? AND user_id=?").bind(hospital, department, symptoms, date, status, recordId, userId).run();
-  return json({ id: recordId, hospital, department, symptoms, date, status });
+  let details = parseRecordDetails(current.details_json);
+  if (body.details !== undefined) details = { ...details, ...sanitizeRecordDetails(body.details) };
+  if (body.appendTranslation !== undefined) {
+    const translations = Array.isArray(details.translations) ? details.translations : [];
+    details.translations = [...translations, sanitizeTranslationEntry(body.appendTranslation)].slice(-100);
+  }
+  sanitizeRecordDetails(details);
+  await env.DB.prepare("UPDATE visit_records SET hospital=?,department=?,symptoms=?,visit_date=?,status=?,details_json=? WHERE id=? AND user_id=?").bind(hospital, department, symptoms, date, status, JSON.stringify(details), recordId, userId).run();
+  return json({ id: recordId, hospital, department, symptoms, date, status, details });
+}
+
+async function deleteRecord(request: Request, env: Env, recordId: string) {
+  const userId = await requireUser(request, env);
+  const current = await env.DB.prepare("SELECT details_json FROM visit_records WHERE id=? AND user_id=?").bind(recordId, userId).first<{ details_json: string }>();
+  if (!current) throw new ApiException(404, "record_not_found", "Visit record not found");
+  const details = parseRecordDetails(current.details_json);
+  const companion = details.companion && typeof details.companion === "object" && !Array.isArray(details.companion) ? details.companion as Record<string, unknown> : null;
+  const orderId = companion && typeof companion.orderId === "string" ? companion.orderId : "";
+  if (orderId) {
+    const chunks = await env.DB.prepare("SELECT object_key FROM recording_chunks WHERE order_id=? LIMIT 1000").bind(orderId).all<{ object_key: string }>();
+    const keys = chunks.results.map((chunk) => chunk.object_key);
+    if (keys.length) await env.RECORDINGS.delete(keys);
+    await env.DB.prepare("DELETE FROM recording_chunks WHERE order_id=?").bind(orderId).run();
+  }
+  const result = await env.DB.prepare("DELETE FROM visit_records WHERE id=? AND user_id=?").bind(recordId, userId).run();
+  if (!result.meta.changes) throw new ApiException(404, "record_not_found", "Visit record not found");
+  return json({ ok: true, recordingsDeleted: Boolean(orderId) });
 }
 
 async function routeRequest(request: Request, env: Env) {
@@ -631,6 +772,7 @@ async function routeRequest(request: Request, env: Env) {
   if (request.method === "POST" && path === "/api/chat") return chat(request, env);
   if (request.method === "POST" && path === "/api/companions") return companionMatches(request, env);
   if (request.method === "POST" && path === "/api/orders") return createOrder(request, env);
+  if (request.method === "GET" && path === "/api/orders") return listOrders(request, env);
   const orderMatch = path.match(/^\/api\/orders\/([^/]+)$/);
   if (request.method === "PATCH" && orderMatch) return updateOrder(request, env, decodeURIComponent(orderMatch[1]));
   const recordingMatch = path.match(/^\/api\/orders\/([^/]+)\/recordings\/(\d+)$/);
@@ -639,6 +781,7 @@ async function routeRequest(request: Request, env: Env) {
   if (request.method === "GET" && path === "/api/records") return listRecords(request, env);
   const recordMatch = path.match(/^\/api\/records\/([^/]+)$/);
   if (request.method === "PATCH" && recordMatch) return updateRecord(request, env, decodeURIComponent(recordMatch[1]));
+  if (request.method === "DELETE" && recordMatch) return deleteRecord(request, env, decodeURIComponent(recordMatch[1]));
   if (request.method === "GET" && path === "/api/health") return json({ status: "ok", service: "narucare-api" });
   throw new ApiException(404, "not_found", "Endpoint not found");
 }

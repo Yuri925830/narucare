@@ -37,23 +37,34 @@ export function CompanionFilterPage({ filters, onChange, onMatch }: { filters: C
   </div>;
 }
 
-export function CompanionListPage({ people, onFilters, onDetail, onChoose }: { people: Companion[]; onFilters: () => void; onDetail: (person: Companion) => void; onChoose: (person: Companion) => void }) {
+export function CompanionListPage({ people, onFilters, onDetail, onChoose }: { people: Companion[]; onFilters: () => void; onDetail: (person: Companion) => void; onChoose: (person: Companion) => void | Promise<void> }) {
   const { t } = useI18n();
   const [limit, setLimit] = useState(6);
+  const [choosingId, setChoosingId] = useState("");
+  const [chooseError, setChooseError] = useState("");
+  async function choose(person: Companion) {
+    if (choosingId) return;
+    setChoosingId(person.id); setChooseError("");
+    try { await onChoose(person); }
+    catch { setChooseError(t("errorGeneric")); setChoosingId(""); }
+  }
   return <Panel className="companion-list-panel">
     <InfoBanner title={t("matchedForYou")} action={<div className="match-banner-action"><NaruPose pose={11} className="companion-list-naru" /><Button variant="ghost" onClick={onFilters}>{t("changeFilters")}</Button></div>}>{t("matchingBasis")}</InfoBanner>
     <div className="companion-list">{people.slice(0, limit).map((person) => <article key={person.id}>
       <span className="person-avatar">{person.nativeName.slice(0, 1)}</span><div className="person-main"><h3>{person.name}</h3><div><StatusPill>{person.match || 90}% {t("match")}</StatusPill><em><Star size={14} fill="currentColor" />{person.rating}</em></div><small>{person.languages.map((code) => localeOptions.find((item) => item.code === code)?.nativeName || code).join(" / ")}</small></div>
       <div className="person-price"><strong>₩{formatWon(person.price)} {t("perHour")}</strong><small>{t("arrivesIn", { minutes: person.eta, max: person.eta + 8 })}</small></div>
-      <div className="person-actions"><Button variant="ghost" onClick={() => onDetail(person)}>{t("viewDetails")}</Button><Button onClick={() => onChoose(person)}>{t("chooseCompanion")}</Button></div>
+      <div className="person-actions"><Button variant="ghost" onClick={() => onDetail(person)}>{t("viewDetails")}</Button><Button onClick={() => void choose(person)} disabled={Boolean(choosingId)}>{choosingId === person.id ? t("loading") : t("chooseCompanion")}</Button></div>
     </article>)}</div>
+    {chooseError && <p className="form-error" role="alert">{chooseError}</p>}
     <div className="list-footer"><InfoBanner tone="navy" icon="shield" title={t("serviceSafety")}>{t("serviceSafetyDesc")}</InfoBanner>{limit < people.length && <Button onClick={() => setLimit(Math.min(limit + 6, people.length))}>{t("loadMoreMatches")}</Button>}</div>
   </Panel>;
 }
 
-export function CompanionDetailPage({ person, onChat, onApply }: { person: Companion; onChat: () => void; onApply: () => void }) {
+export function CompanionDetailPage({ person, onChat, onApply }: { person: Companion; onChat: () => void; onApply: () => void | Promise<void> }) {
   const { locale, t } = useI18n();
   const [experience, setExperience] = useState(person.experience);
+  const [applying, setApplying] = useState(false);
+  const [applyError, setApplyError] = useState("");
   useEffect(() => {
     let active = true;
     setExperience(person.experience);
@@ -64,19 +75,23 @@ export function CompanionDetailPage({ person, onChat, onApply }: { person: Compa
     }
     return () => { active = false; };
   }, [locale, person.experience]);
+  async function apply() { if (applying) return; setApplying(true); setApplyError(""); try { await onApply(); } catch { setApplyError(t("errorGeneric")); setApplying(false); } }
   return <Panel className="companion-detail-panel">
-    <div className="detail-profile"><NaruPose pose={17} className="companion-detail-naru" /><span className="person-avatar xl">{person.nativeName.slice(0, 1)}</span><h2>{person.name}</h2><p>{person.languages.map((code) => localeOptions.find((item) => item.code === code)?.nativeName || code).join(" · ")} · {t("fluent")}</p><StatusPill>{person.hospitals[0]} {t("hospitalFamiliar")}</StatusPill><div className="detail-stats"><span><strong>{person.rating}</strong><small>{t("ratingLabel")}</small></span><span><strong>{person.match || 96}%</strong><small>{t("onTime")}</small></span><span><strong>{person.reviewCount}+</strong><small>{t("completedOrders")}</small></span></div><div className="detail-buttons"><Button variant="secondary" onClick={onChat}><MessageCircleMore />{t("startChat")}</Button><Button onClick={onApply}><UserRound />{t("applyCompanion")}</Button></div></div>
+    <div className="detail-profile"><NaruPose pose={17} className="companion-detail-naru" /><span className="person-avatar xl">{person.nativeName.slice(0, 1)}</span><h2>{person.name}</h2><p>{person.languages.map((code) => localeOptions.find((item) => item.code === code)?.nativeName || code).join(" · ")} · {t("fluent")}</p><StatusPill>{person.hospitals[0]} {t("hospitalFamiliar")}</StatusPill><div className="detail-stats"><span><strong>{person.rating}</strong><small>{t("ratingLabel")}</small></span><span><strong>{person.match || 96}%</strong><small>{t("onTime")}</small></span><span><strong>{person.reviewCount}+</strong><small>{t("completedOrders")}</small></span></div><div className="detail-buttons"><Button variant="secondary" onClick={onChat}><MessageCircleMore />{t("startChat")}</Button><Button onClick={() => void apply()} disabled={applying}><UserRound />{applying ? t("loading") : t("applyCompanion")}</Button></div>{applyError && <p className="form-error" role="alert">{applyError}</p>}</div>
     <div className="detail-info"><h3>{t("experience")}</h3><p className="detail-copy">{experience}</p><h3>{t("userReview")}</h3><div className="review-card"><strong>“{t("sampleCompanionReview")}”</strong><small>— {t("completedOrders")}</small><em>★★★★★ {person.rating}</em></div><div className="detail-price"><small>{t("servicePrice")}</small><strong>₩{formatWon(person.price)} {t("perHour")}</strong></div><InfoBanner tone="navy" icon="shield" title={t("serviceSafety")}>{t("serviceSafetyDesc")}</InfoBanner></div>
   </Panel>;
 }
 
-export function CompanionChatPage({ person, hospitalName, onApply }: { person: Companion; hospitalName: string; onApply: () => void }) {
+export function CompanionChatPage({ person, hospitalName, onApply }: { person: Companion; hospitalName: string; onApply: () => void | Promise<void> }) {
   const { t } = useI18n();
   const [messages, setMessages] = useState([t("companionGreeting", { hospital: person.hospitals[0], minutes: person.eta })]);
   const [input, setInput] = useState("");
+  const [applying, setApplying] = useState(false);
+  const [applyError, setApplyError] = useState("");
   function send(event: FormEvent) { event.preventDefault(); if (!input.trim()) return; setMessages([...messages, input]); setInput(""); }
+  async function apply() { if (applying) return; setApplying(true); setApplyError(""); try { await onApply(); } catch { setApplyError(t("errorGeneric")); setApplying(false); } }
   return <div className="companion-chat-layout"><Panel className="companion-chat-panel"><div className="chat-person"><span className="person-avatar">{person.nativeName.slice(0, 1)}</span><strong>{person.name}<small>{t("onlineEta", { minutes: person.eta })}</small></strong><StatusPill tone="navy"><ShieldCheck size={14} />{t("safetyRecordingOn")}</StatusPill></div><div className="messages"><div className="message message-naru"><p>{messages[0]}</p></div><div className="message message-user"><p>{t("userAtHospital", { hospital: hospitalName })}</p></div>{messages.slice(1).map((message, i) => <div key={i} className="message message-user"><p>{message}</p></div>)}</div><form className="chat-composer" onSubmit={send}><input value={input} onChange={(event) => setInput(event.target.value)} placeholder={t("sendMessage")} /><button aria-label={t("sendMessage")}>→</button></form></Panel>
-    <Panel className="application-card"><h3>{t("application")}</h3><dl><div><dt>{t("hospital")}</dt><dd>{hospitalName}</dd></div><div><dt>{t("startTime")}</dt><dd>{t("todayAt", { time: "16:00" })}</dd></div><div><dt>{t("estimatedDuration")}</dt><dd>{t("hours", { count: 2 })}</dd></div><div><dt>{t("price")}</dt><dd>₩{formatWon(person.price)} {t("perHour")}</dd></div></dl><InfoBanner tone="mint" icon="shield" title={t("serviceSafety")}>{t("recordSavedDesc")}</InfoBanner><Button onClick={onApply}>{t("requestNamed", { name: person.name })}</Button></Panel></div>;
+    <Panel className="application-card"><h3>{t("application")}</h3><dl><div><dt>{t("hospital")}</dt><dd>{hospitalName}</dd></div><div><dt>{t("startTime")}</dt><dd>{t("todayAt", { time: "16:00" })}</dd></div><div><dt>{t("estimatedDuration")}</dt><dd>{t("hours", { count: 2 })}</dd></div><div><dt>{t("price")}</dt><dd>₩{formatWon(person.price)} {t("perHour")}</dd></div></dl><InfoBanner tone="mint" icon="shield" title={t("serviceSafety")}>{t("recordSavedDesc")}</InfoBanner>{applyError && <p className="form-error" role="alert">{applyError}</p>}<Button onClick={() => void apply()} disabled={applying}>{applying ? t("loading") : t("requestNamed", { name: person.name })}</Button></Panel></div>;
 }
 
 export function CompanionWaitingPage({ person, onAccepted, onMessage, onCancel }: { person: Companion; onAccepted: () => void; onMessage: () => void; onCancel: () => void }) {
@@ -101,11 +116,13 @@ export function CompanionArrivedPage({ order, onMet, onProblem }: { order: Compa
   const { t } = useI18n();
   const [requesting, setRequesting] = useState(false);
   function confirmMet() {
+    if (requesting) return;
     setRequesting(true);
     // Enter the service screen immediately. Microphone permission can remain
     // pending indefinitely in some browsers, so recording attaches later if
     // the user grants it instead of blocking the care flow.
-    onMet(null);
+    try { onMet(null); }
+    finally { setRequesting(false); }
     try {
       if (!navigator.mediaDevices?.getUserMedia) return;
       const request = navigator.mediaDevices.getUserMedia({ audio: true });

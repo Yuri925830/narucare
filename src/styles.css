@@ -770,3 +770,104 @@ body {
   .in-app-language .center-hint { margin: 0; padding: 0 6px; font-size: 10px; line-height: 1.25; }
   .waiting-clock .naru-standard.companion-waiting-naru { width: 78px; top: -36px; right: 0; }
 }
+
+/* Emergency and active-service screens keep strong contrast on every mobile
+   compositor. The earlier dark theme could lose its background while retaining
+   white inherited text on iOS, so both material and foreground are explicit. */
+.page-content > .emergency-calling-panel {
+  color: var(--brown-dark) !important;
+  background:
+    radial-gradient(ellipse 70% 38% at 10% 0%, rgba(255,255,255,.98), transparent 72%),
+    radial-gradient(ellipse at 100% 100%, rgba(224,168,160,.28), transparent 50%),
+    linear-gradient(145deg, #fffaf6, #f5e6dd 56%, #ecd6cd) !important;
+  border-color: rgba(202,151,142,.62);
+}
+.emergency-calling-panel .call-left > p,
+.emergency-calling-panel .call-location span,
+.emergency-calling-panel .call-script > small,
+.emergency-calling-panel .browser-note { color: #6f625d; }
+.emergency-calling-panel .call-location strong,
+.emergency-calling-panel .call-script article p { color: #352c29; }
+.emergency-calling-panel .call-left h2 { color: #352c29; }
+.emergency-calling-panel .call-location,
+.emergency-calling-panel .call-script article {
+  border-color: rgba(194,151,137,.55);
+  background: rgba(255,255,255,.72);
+  box-shadow: inset 0 2px 2px rgba(255,255,255,.96), 0 9px 22px rgba(103,70,54,.09);
+}
+.emergency-calling-panel .call-script > strong { color: #bf504c; }
+.emergency-calling-panel .call-119 { color: white; border-color: rgba(181,111,110,.28); box-shadow: inset 0 3px 3px rgba(255,255,255,.4), 0 18px 35px rgba(173,62,60,.2); }
+
+.page-content > .service-panel {
+  color: var(--brown-dark) !important;
+  background:
+    radial-gradient(ellipse 64% 36% at 8% 0%, rgba(255,255,255,.98), transparent 72%),
+    radial-gradient(ellipse at 100% 100%, rgba(180,205,189,.3), transparent 48%),
+    linear-gradient(145deg, #fffefa, #f0eee7 55%, #dfe8e0) !important;
+  border-color: rgba(159,185,168,.58);
+}
+.service-panel .service-main > span,
+.service-panel .record-info p { color: #665f5b; }
+.service-panel .service-time,
+.service-panel .record-info h3,
+.service-panel .service-person h2 { color: #342c28; }
+.service-panel .record-info,
+.service-panel .service-person > div {
+  color: #342c28;
+  border-color: rgba(159,185,168,.58);
+  background: rgba(255,255,255,.7);
+  box-shadow: inset 0 2px 2px white, 0 10px 24px rgba(77,104,87,.09);
+}
+
+/* The emergency icon and worried Naru are separate objects—no overlap and no
+   cheerful pose on a life-safety confirmation screen. */
+.emergency-illustration { flex-direction: column; justify-content: center; align-items: center; gap: 24px; }
+.emergency-illustration > div { position: relative; top: auto; flex: 0 0 auto; }
+.emergency-illustration .emergency-confirm-naru { width: 190px; flex: 0 0 auto; }
+
+.record-detail-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.records-list article .record-detail-actions .button-primary {
+  color: white;
+  border-color: rgba(91,63,51,.74);
+  background: linear-gradient(145deg, #9e8171, #60483d);
+  box-shadow: inset 0 2px 1px rgba(255,255,255,.27), 0 9px 18px rgba(82,55,44,.15);
+}
+.records-list article > .record-manage-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+.records-list article > .record-manage-actions .button { min-height: 40px; margin-left: 0; border-radius: 13px; }
+.records-list article > .record-manage-actions .button-ghost { color: #a5413f; }
+.record-dialog { width: min(720px, calc(100vw - 30px)); max-width: 720px; max-height: min(82dvh, 760px); overflow-y: auto; }
+.record-dialog > dl,
+.translation-record-list { display: grid; gap: 10px; margin: 22px 0; }
+.record-dialog dl > div { display: grid; grid-template-columns: minmax(110px,.4fr) minmax(0,1fr); gap: 18px; padding: 15px; border-radius: 14px; background: rgba(244,235,228,.72); }
+.record-dialog dt { color: var(--muted); }
+.record-dialog dd { margin: 0; font-weight: 700; overflow-wrap: anywhere; }
+.translation-record-list article { padding: 16px; border: 1px solid var(--line); border-radius: 15px; background: linear-gradient(145deg, #fffefa, #f3e9e1); }
+.translation-record-list span,
+.translation-record-list small { display: block; color: var(--muted); font-size: 11px; }
+.translation-record-list strong,
+.translation-record-list p { display: block; margin: 10px 0; line-height: 1.55; }
+.translation-record-list p { color: var(--brown); }
+.record-empty-detail { min-height: 210px; display: grid; place-content: center; justify-items: center; gap: 18px; color: var(--muted); text-align: center; }
+.record-empty-detail svg { width: 48px; height: 48px; color: var(--brown-light); }
+.delete-record-dialog > svg { width: 54px; height: 54px; color: var(--red); }
+.delete-record-dialog > div { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.orders-panel { padding: 24px; }
+.orders-list { display: grid; gap: 16px; margin-top: 24px; }
+.orders-list article { display: grid; grid-template-columns: 76px minmax(0,1fr) auto; align-items: center; gap: 20px; padding: 20px; border: 1px solid var(--line); border-radius: 19px; background: rgba(255,255,255,.62); box-shadow: inset 0 2px 2px white, 0 10px 24px rgba(87,61,48,.08); }
+.orders-list h2 { margin: 0 0 8px; font-size: 19px; }
+.orders-list p,
+.orders-list small { display: flex; align-items: center; gap: 7px; margin: 10px 0 0; color: var(--muted); }
+.orders-list strong { display: block; margin-top: 11px; color: var(--brown); }
+.orders-list > article > .button { min-width: 150px; }
+
+@media (max-width: 760px) {
+  .emergency-illustration { min-height: 340px; gap: 14px; }
+  .emergency-illustration > div { width: 145px; height: 145px; }
+  .emergency-illustration .emergency-confirm-naru { width: 128px; }
+  .records-list article > .record-manage-actions { display: grid; grid-template-columns: 1fr 1fr; }
+  .record-dialog dl > div { grid-template-columns: 1fr; gap: 7px; }
+  .orders-panel { padding: 10px 0 !important; border: 0; background: transparent; box-shadow: none; }
+  .orders-list article { grid-template-columns: 64px minmax(0,1fr); gap: 14px; padding: 15px; }
+  .orders-list > article > .button { grid-column: 1 / -1; width: 100%; }
+}

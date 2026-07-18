@@ -22,6 +22,33 @@ const context = await browser.newContext({
   geolocation: { latitude: 37.5665, longitude: 126.978 },
 });
 await context.addInitScript(() => {
+  let locationWatchId = 0;
+  const locationTimers = new Map();
+  Object.defineProperty(navigator, "geolocation", { configurable: true, value: {
+    watchPosition(success) {
+      const id = ++locationWatchId;
+      const timers = [
+        window.setTimeout(() => success({ coords: { latitude: 37.5665, longitude: 126.978, accuracy: 14 }, timestamp: Date.now() }), 20),
+        window.setTimeout(() => success({ coords: { latitude: 37.56651, longitude: 126.97801, accuracy: 6 }, timestamp: Date.now() }), 120),
+      ];
+      locationTimers.set(id, timers);
+      return id;
+    },
+    clearWatch(id) { (locationTimers.get(id) || []).forEach((timer) => window.clearTimeout(timer)); locationTimers.delete(id); },
+    getCurrentPosition(success) { success({ coords: { latitude: 37.56651, longitude: 126.97801, accuracy: 6 }, timestamp: Date.now() }); },
+  } });
+  window.__speechEvents = [];
+  class MockUtterance {
+    constructor(text) { this.text = text; this.lang = ""; this.rate = 1; this.volume = 1; this.onend = null; }
+  }
+  Object.defineProperty(window, "SpeechSynthesisUtterance", { configurable: true, value: MockUtterance });
+  Object.defineProperty(window, "speechSynthesis", { configurable: true, value: {
+    cancel() { window.__speechEvents.push("cancel"); },
+    speak(utterance) {
+      window.__speechEvents.push(`speak:${utterance.lang}:${utterance.text}`);
+      window.setTimeout(() => utterance.onend?.(), 35);
+    },
+  } });
   class MockSpeechRecognition {
     continuous = false;
     interimResults = false;
@@ -104,7 +131,7 @@ await page.locator(".agent-grid").waitFor();
 await page.locator(".chat-composer input").fill("肚子疼，一直拉肚子，还吐了，今天吃了海鲜");
 await page.locator(".chat-composer").evaluate((form) => form.requestSubmit());
 await page.locator(".hospital-panel").waitFor({ timeout: 5000 });
-await page.waitForTimeout(800);
+await page.locator(".hospital-item").first().waitFor({ timeout: 12_000 });
 await page.locator(".side-nav button").first().click();
 await page.locator(".medical-card-form").waitFor();
 if (!/肚子疼/.test(await page.locator('[data-field="symptoms"] textarea').inputValue())) throw new Error("Chat symptoms were not written back to the medical card");
@@ -134,6 +161,9 @@ await page.screenshot({ path: shot("09-navigation-desktop.png") });
 await page.locator(".route-info > button.button-secondary").click();
 await page.locator(".translation-panel").waitFor();
 await page.waitForTimeout(300);
+await page.locator(".translation-composer textarea").fill("我的肚子很痛，需要告诉医院人员");
+await page.locator(".translation-composer").evaluate((form) => form.requestSubmit());
+await page.waitForTimeout(120);
 await page.locator(".mic-button").click();
 await page.waitForTimeout(100);
 const voiceLanguage = await page.evaluate(() => window.__voiceRecognitionStarted || "");
@@ -143,11 +173,30 @@ await page.screenshot({ path: shot("10-translation-desktop.png") });
 await page.locator(".side-nav button").nth(3).click();
 await page.locator(".emergency-confirm-panel").waitFor();
 await page.waitForTimeout(300);
+const emergencyPose = await page.locator(".emergency-confirm-naru img").getAttribute("src");
+if (!emergencyPose?.includes("pose-09.png")) throw new Error("Emergency confirmation must use the worried Naru pose");
+const emergencyIconBox = await page.locator(".emergency-illustration > div").boundingBox();
+const emergencyNaruBox = await page.locator(".emergency-confirm-naru").boundingBox();
+if (!emergencyIconBox || !emergencyNaruBox || !(emergencyIconBox.y + emergencyIconBox.height <= emergencyNaruBox.y + 2)) throw new Error("Emergency Naru overlaps the red alert icon");
 await page.screenshot({ path: shot("11-emergency-desktop.png") });
 await page.locator(".emergency-copy > .button-danger").click();
 await page.locator(".emergency-calling-panel").waitFor();
 await page.waitForTimeout(150);
+const emergencyTextColor = await page.locator(".call-script article p").first().evaluate((element) => getComputedStyle(element).color);
+if (/rgb\(255,\s*255,\s*255\)/.test(emergencyTextColor)) throw new Error("Emergency call content still inherits unreadable white text");
+await page.locator(".call-script article .button-danger").click();
+await page.waitForTimeout(100);
+const speechBeforeExit = await page.evaluate(() => window.__speechEvents.filter((event) => event.startsWith("speak:")).length);
+if (!speechBeforeExit) throw new Error("Korean 119 broadcast did not start");
 await page.screenshot({ path: shot("11-emergency-calling-desktop.png") });
+await page.locator(".page-back").click();
+await page.locator(".emergency-confirm-panel").waitFor();
+await page.locator(".emergency-copy > .button-ghost").click();
+await page.locator(".hospital-panel").waitFor();
+await page.locator(".hospital-item").first().waitFor({ timeout: 12_000 });
+await page.waitForTimeout(900);
+const speechAfterDecline = await page.evaluate(() => window.__speechEvents.filter((event) => event.startsWith("speak:")).length);
+if (speechAfterDecline !== speechBeforeExit) throw new Error("Korean 119 broadcast continued after leaving emergency mode");
 
 await page.locator(".side-nav button").nth(1).click();
 await page.locator(".agent-grid").waitFor();
@@ -166,7 +215,9 @@ await page.screenshot({ path: shot("14-companion-list-desktop.png") });
 await page.locator(".companion-list article").first().locator(".button-ghost").click();
 await page.locator(".companion-detail-panel").waitFor();
 await page.screenshot({ path: shot("15-companion-detail-desktop.png") });
-await page.locator(".detail-buttons .button-primary").click();
+await page.locator(".page-back").click();
+await page.locator(".companion-list-panel").waitFor();
+await page.locator(".companion-list article").first().locator(".button-primary").click();
 await page.locator(".waiting-panel").waitFor();
 await page.screenshot({ path: shot("16-companion-waiting-desktop.png") });
 await page.locator(".simulate-accept").click();
@@ -176,12 +227,14 @@ await page.locator(".payment-actions > .button").click();
 await page.locator(".arrived-panel").waitFor();
 await page.screenshot({ path: shot("18-companion-arrived-desktop.png") });
 await page.locator(".arrived-confirm > .button-primary").click();
-await page.waitForTimeout(9_000);
+await page.waitForTimeout(700);
 if (!await page.locator(".service-panel").isVisible()) {
   await page.screenshot({ path: shot("debug-arrived-stuck.png") });
   throw new Error(`Companion service did not start: ${await page.locator(".arrived-confirm").innerText()}`);
 }
 await page.locator(".service-panel").waitFor();
+const serviceTextColor = await page.locator(".service-time").evaluate((element) => getComputedStyle(element).color);
+if (/rgb\(255,\s*255,\s*255\)/.test(serviceTextColor)) throw new Error("Companion service content still inherits unreadable white text");
 await page.screenshot({ path: shot("19-companion-service-desktop.png") });
 await page.locator(".service-actions .button-danger").click();
 await page.locator(".finished-panel").waitFor();
@@ -195,9 +248,38 @@ await page.locator(".side-nav button").nth(4).click();
 await page.locator(".profile-panel").waitFor();
 await page.waitForTimeout(300);
 await page.screenshot({ path: shot("21-profile-desktop.png") });
+await page.locator(".profile-grid button").nth(2).click();
+await page.locator(".orders-panel").waitFor();
+if (!await page.locator(".orders-list article").count()) throw new Error("Companion orders page did not load the created order");
+await page.locator(".page-back").click();
+await page.locator(".profile-panel").waitFor();
 await page.locator(".profile-grid button").nth(1).click();
 await page.locator(".records-panel").waitFor();
 await page.screenshot({ path: shot("22-records-desktop.png") });
+const firstRecord = page.locator(".records-list article").first();
+await firstRecord.locator(".record-detail-actions button").nth(0).click();
+const translationDetail = await page.locator(".record-dialog").innerText();
+await page.locator(".record-dialog > .button").click();
+await firstRecord.locator(".record-detail-actions button").nth(1).click();
+const companionDetail = await page.locator(".record-dialog").innerText();
+await page.locator(".record-dialog > .button").click();
+await firstRecord.locator(".record-detail-actions button").nth(2).click();
+const feeDetail = await page.locator(".record-dialog").innerText();
+await page.locator(".record-dialog > .button").click();
+if (new Set([translationDetail, companionDetail, feeDetail]).size !== 3) throw new Error("Translation, companion and fee record dialogs still show identical content");
+const downloadPromise = page.waitForEvent("download");
+await firstRecord.locator(".record-manage-actions .button-secondary").click();
+const download = await downloadPromise;
+if (!download.suggestedFilename().endsWith(".json")) throw new Error("Visit record export did not create a JSON file");
+await firstRecord.locator(".record-manage-actions .button-ghost").click();
+await page.locator(".delete-record-dialog").waitFor();
+await page.locator(".delete-record-dialog .button-secondary").click();
+const recordCountBeforeDelete = await page.locator(".records-list article").count();
+await firstRecord.locator(".record-manage-actions .button-ghost").click();
+await page.locator(".delete-record-dialog").waitFor();
+await page.locator(".delete-record-dialog .button-danger").click();
+await page.locator(".delete-record-dialog").waitFor({ state: "detached" });
+await page.waitForFunction((expected) => document.querySelectorAll(".records-list article").length === expected, recordCountBeforeDelete - 1);
 
 await page.setViewportSize({ width: 430, height: 932 });
 await page.locator(".bottom-nav button").nth(1).click();

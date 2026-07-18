@@ -8,6 +8,7 @@ export interface PreciseLocationFix {
 export interface PreciseLocationOptions {
   targetAccuracyMeters?: number;
   hardTimeoutMs?: number;
+  minimumObservationMs?: number;
 }
 
 export function requestPreciseLocation(
@@ -16,17 +17,21 @@ export function requestPreciseLocation(
 ): Promise<PreciseLocationFix> {
   const targetAccuracy = options.targetAccuracyMeters ?? 25;
   const hardTimeout = options.hardTimeoutMs ?? 15_000;
+  const minimumObservation = Math.max(0, Math.min(options.minimumObservationMs ?? 2_500, hardTimeout - 1));
 
   return new Promise((resolve, reject) => {
     let watchId = -1;
     let settled = false;
     let best: PreciseLocationFix | null = null;
+    const startedAt = Date.now();
+    let accuracyTimer: ReturnType<typeof globalThis.setTimeout> | null = null;
 
     const finish = (fix?: PreciseLocationFix, error?: GeolocationPositionError | Error) => {
       if (settled) return;
       settled = true;
       if (watchId >= 0) geolocation.clearWatch(watchId);
       globalThis.clearTimeout(timeoutId);
+      if (accuracyTimer) globalThis.clearTimeout(accuracyTimer);
       if (fix) resolve(fix);
       else reject(error || new Error("Location unavailable"));
     };
@@ -45,7 +50,16 @@ export function requestPreciseLocation(
           timestamp: position.timestamp || Date.now(),
         };
         if (!best || fix.accuracy < best.accuracy) best = fix;
-        if (fix.accuracy <= targetAccuracy) finish(fix);
+        if (fix.accuracy <= targetAccuracy) {
+          const remainingObservation = minimumObservation - (Date.now() - startedAt);
+          if (remainingObservation <= 0) finish(best);
+          else if (!accuracyTimer) {
+            accuracyTimer = globalThis.setTimeout(() => {
+              accuracyTimer = null;
+              if (best && best.accuracy <= targetAccuracy) finish(best);
+            }, remainingObservation);
+          }
+        }
       },
       (error) => {
         if (error.code === error.PERMISSION_DENIED) finish(undefined, error);

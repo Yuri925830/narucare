@@ -15,6 +15,7 @@ export type View =
   | "companion-arrived"
   | "companion-service"
   | "companion-finished"
+  | "companion-orders"
   | "emergency-confirm"
   | "emergency-calling"
   | "profile"
@@ -110,6 +111,36 @@ export interface VisitRecord {
   symptoms: string;
   date: string;
   status: string;
+  details?: VisitRecordDetails;
+}
+
+export interface TranslationRecordEntry {
+  speaker: "patient" | "staff";
+  sourceText: string;
+  translatedText: string;
+  sourceLanguage: string;
+  targetLanguage: string;
+  timestamp: string;
+}
+
+export interface VisitRecordDetails {
+  translations?: TranslationRecordEntry[];
+  companion?: {
+    orderId: string;
+    name: string;
+    status: CompanionOrder["status"];
+    durationMinutes: number;
+    hospital: string;
+  };
+  fees?: {
+    currency: "KRW";
+    serviceTotal: number;
+    depositPaid: number;
+    balancePaid: number;
+    balanceDue: number;
+    paymentMethod: string;
+    status: "unpaid" | "deposit_paid" | "paid";
+  };
 }
 
 export interface CompanionOrder {
@@ -120,4 +151,9 @@ export interface CompanionOrder {
   durationMinutes: number;
   deposit: number;
   paymentMethod: string;
+  balancePaid?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  rating?: number | null;
+  review?: string;
 }

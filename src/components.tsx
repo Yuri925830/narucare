@@ -59,7 +59,9 @@ interface AppShellProps {
 export function AppShell({ view, title, user, onNavigate, onLanguage, onBack, canGoBack, children, hideHeader }: AppShellProps) {
   const { t } = useI18n();
   const card = user.card;
-  const isActive = (id: View) => id === view || (id === "agent" && ["hospitals", "navigation", "translation", "companions", "companions-notice", "companions-filter", "companion-detail", "companion-chat", "companion-waiting", "companion-payment", "companion-arrived", "companion-service", "companion-finished"].includes(view));
+  const isActive = (id: View) => id === view
+    || (id === "agent" && ["hospitals", "navigation", "translation", "companions", "companions-notice", "companions-filter", "companion-detail", "companion-chat", "companion-waiting", "companion-payment", "companion-arrived", "companion-service", "companion-finished"].includes(view))
+    || (id === "profile" && ["records", "companion-orders"].includes(view));
 
   return <div className="app-layout">
     <aside className="sidebar">
