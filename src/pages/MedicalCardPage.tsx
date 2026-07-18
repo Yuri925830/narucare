@@ -63,7 +63,7 @@ export function MedicalCardPage({ card, onSaved }: { card: MedicalCard | null; o
     if (!navigator.geolocation) { setLocationError(t("locationDenied")); return; }
     setLocating(true);
     try {
-      const point = await requestPreciseLocation(navigator.geolocation, { targetAccuracyMeters: 10, hardTimeoutMs: 25_000, minimumObservationMs: 2_500 });
+      const point = await requestPreciseLocation(navigator.geolocation, { targetAccuracyMeters: 8, hardTimeoutMs: 35_000, minimumObservationMs: 5_000, minimumAccurateSamples: 2 });
       const address = await api.reverseGeocode(point.lat, point.lng);
       setForm((current) => ({
         ...current,

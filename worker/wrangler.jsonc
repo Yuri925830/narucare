@@ -7,7 +7,7 @@
   "vars": {
     "ALLOWED_ORIGINS": "http://localhost:5173,http://127.0.0.1:5173",
     "ALLOW_GITHUB_PAGES": "true",
-    "AI_MODEL": "@cf/meta/llama-3.2-3b-instruct"
+    "AI_MODEL": "@cf/meta/llama-3.1-8b-instruct-fast"
   },
   "d1_databases": [
     {

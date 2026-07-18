@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { assessMedicalIntent, hasMedicalSymptoms } from "./triage";
+import { assessMedicalIntent, hasMedicalSymptoms, isMedicalKnowledgeQuestion, isNaruCapabilityQuestion, isNaruIdentityQuestion } from "./triage";
 
 describe("medical triage", () => {
   it.each([
@@ -44,6 +44,54 @@ describe("medical triage", () => {
   it("keeps ordinary conversation general", () => {
     expect(assessMedicalIntent("谢谢你，Naru").intent).toBe("general");
     expect(hasMedicalSymptoms("谢谢你，Naru")).toBe(false);
+  });
+
+  it.each([
+    "失眠吃安眠药可以根治吗",
+    "什么是失眠",
+    "高血压有哪些症状",
+    "抗生素有哪些副作用",
+    "Can sleeping pills cure insomnia?",
+    "睡眠药能治好失眠吗",
+    "胸痛有哪些常见原因？",
+    "发烧时需要去医院吗？",
+    "What causes high blood pressure?",
+    "불면증은 완치할 수 있나요?",
+    "不眠症とは何ですか？",
+  ])("answers general medical knowledge without starting a hospital search: %s", (message) => {
+    expect(isMedicalKnowledgeQuestion(message)).toBe(true);
+    expect(assessMedicalIntent(message).intent).toBe("education");
+    expect(assessMedicalIntent(message).symptoms).toBe("");
+  });
+
+  it.each([
+    "我失眠三天了，而且白天一直头晕",
+    "我现在发烧咳嗽",
+    "I have had a fever and cough for two days",
+  ])("distinguishes a current personal symptom from a knowledge question: %s", (message) => {
+    expect(isMedicalKnowledgeQuestion(message)).toBe(false);
+    expect(assessMedicalIntent(message).intent).toBe("hospital");
+  });
+
+  it("keeps emergency red flags above educational phrasing", () => {
+    expect(assessMedicalIntent("我胸痛是为什么").intent).toBe("emergency");
+    expect(assessMedicalIntent("我现在无法呼吸，这是怎么回事").intent).toBe("emergency");
+  });
+
+  it("treats duration without a pronoun as an active personal symptom", () => {
+    expect(assessMedicalIntent("发烧三天了怎么办").intent).toBe("hospital");
+  });
+
+  it("recognizes Naru identity and capability questions as conversation", () => {
+    expect(isNaruIdentityQuestion("你是谁？")).toBe(true);
+    expect(isNaruCapabilityQuestion("你能做什么")).toBe(true);
+    expect(assessMedicalIntent("你是谁？").intent).toBe("general");
+  });
+
+  it("never carries an earlier knowledge question into a later symptom summary", () => {
+    const result = assessMedicalIntent("我现在发烧咳嗽", ["失眠吃安眠药可以根治吗"]);
+    expect(result.intent).toBe("hospital");
+    expect(result.symptoms).not.toContain("安眠药");
   });
 
   it.each([

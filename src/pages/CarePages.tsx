@@ -4,8 +4,8 @@ import { api } from "../api";
 import { Button, InfoBanner, InteractiveMap, NaruPose, Panel, StatusPill } from "../components";
 import { evaluateOpeningHours, formatRestDays } from "../hospitalHours";
 import { localeOptions, useI18n } from "../i18n";
-import { assessMedicalIntent } from "../triage";
-import type { Hospital, LocationState, MedicalCard, TranslationRecordEntry } from "../types";
+import { assessMedicalIntent, isNaruCapabilityQuestion, isNaruIdentityQuestion } from "../triage";
+import type { ChatHistoryEntry, Hospital, LocationState, MedicalCard, TranslationRecordEntry } from "../types";
 
 interface Message { id: string; role: "naru" | "user" | "status"; text: string }
 
@@ -50,7 +50,18 @@ export function AgentPage({ card, onCard, onEmergency, onHospitals, onSymptoms, 
       setGate(true);
       return;
     }
-    const previousUserMessages = messages.filter((message) => message.role === "user").map((message) => message.text);
+    if (isNaruIdentityQuestion(clean)) {
+      setMessages((current) => [...current, { id: crypto.randomUUID(), role: "naru", text: t("naruIdentityAnswer") }]);
+      return;
+    }
+    if (isNaruCapabilityQuestion(clean)) {
+      setMessages((current) => [...current, { id: crypto.randomUUID(), role: "naru", text: t("naruCapabilitiesAnswer") }]);
+      return;
+    }
+    const history: ChatHistoryEntry[] = messages
+      .filter((message) => message.role !== "status" && message.id !== "welcome")
+      .map((message) => ({ role: message.role === "user" ? "user" : "assistant", content: message.text }));
+    const previousUserMessages = history.filter((message) => message.role === "user").map((message) => message.content);
     const localTriage = assessMedicalIntent(clean, previousUserMessages, true);
     const effectiveSymptoms = localTriage.symptoms || card.symptoms?.trim() || clean;
     if (localTriage.symptoms) onSymptoms?.(localTriage.symptoms);
@@ -67,7 +78,7 @@ export function AgentPage({ card, onCard, onEmergency, onHospitals, onSymptoms, 
     }
     setBusy(true);
     try {
-      const response = await api.chat(clean, locale, true, previousUserMessages);
+      const response = await api.chat(clean, locale, true, history);
       const responseSymptoms = response.symptoms?.trim() || effectiveSymptoms;
       if (response.symptoms) onSymptoms?.(response.symptoms);
       if (response.intent === "emergency") return onEmergency(responseSymptoms);
@@ -76,7 +87,10 @@ export function AgentPage({ card, onCard, onEmergency, onHospitals, onSymptoms, 
       if (response.intent === "flow") return onFlow?.();
       if (response.intent === "translation") return onTranslation?.();
       if (response.intent === "companion") return onCompanion();
-      setMessages((current) => [...current, { id: crypto.randomUUID(), role: "naru", text: response.reply || t("naruReady", { name: card.name }) }]);
+      const fallback = response.intent === "education" || localTriage.intent === "education" ? t("medicalEducationFallback") : t("naruConversationFallback");
+      const reply = response.reply || fallback;
+      const safeReply = response.intent === "education" && response.reply ? `${reply}\n\n${t("medicalEducationBoundary")}` : reply;
+      setMessages((current) => [...current, { id: crypto.randomUUID(), role: "naru", text: safeReply }]);
     } finally {
       setBusy(false);
     }

@@ -9,6 +9,7 @@ export interface PreciseLocationOptions {
   targetAccuracyMeters?: number;
   hardTimeoutMs?: number;
   minimumObservationMs?: number;
+  minimumAccurateSamples?: number;
 }
 
 export function requestPreciseLocation(
@@ -18,11 +19,13 @@ export function requestPreciseLocation(
   const targetAccuracy = options.targetAccuracyMeters ?? 25;
   const hardTimeout = options.hardTimeoutMs ?? 15_000;
   const minimumObservation = Math.max(0, Math.min(options.minimumObservationMs ?? 2_500, hardTimeout - 1));
+  const minimumAccurateSamples = Math.max(1, Math.min(options.minimumAccurateSamples ?? 2, 5));
 
   return new Promise((resolve, reject) => {
     let watchId = -1;
     let settled = false;
     let best: PreciseLocationFix | null = null;
+    let accurateSamples = 0;
     const startedAt = Date.now();
     let accuracyTimer: ReturnType<typeof globalThis.setTimeout> | null = null;
 
@@ -51,6 +54,8 @@ export function requestPreciseLocation(
         };
         if (!best || fix.accuracy < best.accuracy) best = fix;
         if (fix.accuracy <= targetAccuracy) {
+          accurateSamples += 1;
+          if (accurateSamples < minimumAccurateSamples) return;
           const remainingObservation = minimumObservation - (Date.now() - startedAt);
           if (remainingObservation <= 0) finish(best);
           else if (!accuracyTimer) {

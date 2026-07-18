@@ -97,7 +97,7 @@ function AppInner() {
   const refreshLocation = useCallback(async (): Promise<LocationState> => {
     if (!navigator.geolocation) return location;
     try {
-      const point = await requestPreciseLocation(navigator.geolocation, { targetAccuracyMeters: 10, hardTimeoutMs: 25_000, minimumObservationMs: 2_500 });
+      const point = await requestPreciseLocation(navigator.geolocation, { targetAccuracyMeters: 8, hardTimeoutMs: 35_000, minimumObservationMs: 5_000, minimumAccurateSamples: 2 });
       const reverseAddress = await api.reverseGeocode(point.lat, point.lng);
       // GPS decides proximity and emergency coordinates. A user-entered door
       // address is more precise for people, so never replace it with the name

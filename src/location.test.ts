@@ -21,7 +21,7 @@ describe("requestPreciseLocation", () => {
       clearWatch(id: number) { cleared = id; },
       getCurrentPosition() { /* unused */ },
     } as Geolocation;
-    const result = await requestPreciseLocation(geolocation, { targetAccuracyMeters: 20, hardTimeoutMs: 100, minimumObservationMs: 0 });
+    const result = await requestPreciseLocation(geolocation, { targetAccuracyMeters: 20, hardTimeoutMs: 100, minimumObservationMs: 0, minimumAccurateSamples: 1 });
     expect(result.accuracy).toBe(11);
     expect(result.lat).toBeCloseTo(37.56651);
     expect(cleared).toBe(7);
@@ -43,4 +43,18 @@ describe("requestPreciseLocation", () => {
   });
 
   it("formats accuracy for display", () => expect(formatAccuracy(12.4)).toBe("±12 m"));
+
+  it("waits for repeated accurate samples instead of trusting one optimistic fix", async () => {
+    const geolocation = {
+      watchPosition(success: PositionCallback) {
+        setTimeout(() => success(position(7, 37.57001, 127.03001)), 0);
+        setTimeout(() => success(position(5, 37.57002, 127.03002)), 5);
+        return 9;
+      },
+      clearWatch() { /* no-op */ },
+      getCurrentPosition() { /* unused */ },
+    } as Geolocation;
+    const result = await requestPreciseLocation(geolocation, { targetAccuracyMeters: 8, hardTimeoutMs: 100, minimumObservationMs: 0, minimumAccurateSamples: 2 });
+    expect(result.accuracy).toBe(5);
+  });
 });

@@ -48,6 +48,11 @@ export interface SessionUser {
   card: MedicalCard | null;
 }
 
+export interface ChatHistoryEntry {
+  role: "user" | "assistant";
+  content: string;
+}
+
 export interface Hospital {
   id: string;
   name: string;

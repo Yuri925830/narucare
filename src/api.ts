@@ -1,6 +1,6 @@
 import { companions, fallbackHospitals, matchCompanions } from "./data";
 import { assessMedicalIntent } from "./triage";
-import type { Companion, CompanionFilters, CompanionOrder, Hospital, MedicalCard, SessionUser, TranslationRecordEntry, VisitRecord } from "./types";
+import type { ChatHistoryEntry, Companion, CompanionFilters, CompanionOrder, Hospital, MedicalCard, SessionUser, TranslationRecordEntry, VisitRecord } from "./types";
 
 const API_BASE = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
 const TOKEN_KEY = "narucare-session";
@@ -178,12 +178,13 @@ export const api = {
     }, 45_000);
     return data.text.trim();
   },
-  async chat(message: string, locale: string, hasCard: boolean, previousUserMessages: string[] = []) {
+  async chat(message: string, locale: string, hasCard: boolean, history: ChatHistoryEntry[] = []) {
+    const previousUserMessages = history.filter((entry) => entry.role === "user").map((entry) => entry.content);
     const local = assessMedicalIntent(message, previousUserMessages, hasCard);
-    if (local.intent !== "general") return { reply: "", intent: local.intent, symptoms: local.symptoms };
+    if (local.intent !== "general" && local.intent !== "education") return { reply: "", intent: local.intent, symptoms: local.symptoms };
     try {
-      return await request<{ reply: string; intent: "emergency" | "hospital" | "card" | "flow" | "translation" | "companion" | "general"; symptoms?: string }>("/api/chat", {
-        method: "POST", body: JSON.stringify({ message, locale, hasCard, history: previousUserMessages.slice(-6) }),
+      return await request<{ reply: string; intent: "emergency" | "hospital" | "card" | "flow" | "translation" | "companion" | "education" | "general"; symptoms?: string }>("/api/chat", {
+        method: "POST", body: JSON.stringify({ message, locale, hasCard, history: history.slice(-10) }),
       });
     } catch {
       return { reply: "", intent: local.intent, symptoms: local.symptoms };

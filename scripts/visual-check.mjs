@@ -30,6 +30,7 @@ await context.addInitScript(() => {
       const timers = [
         window.setTimeout(() => success({ coords: { latitude: 37.5665, longitude: 126.978, accuracy: 14 }, timestamp: Date.now() }), 20),
         window.setTimeout(() => success({ coords: { latitude: 37.56651, longitude: 126.97801, accuracy: 6 }, timestamp: Date.now() }), 120),
+        window.setTimeout(() => success({ coords: { latitude: 37.56652, longitude: 126.97802, accuracy: 5 }, timestamp: Date.now() }), 180),
       ];
       locationTimers.set(id, timers);
       return id;
@@ -143,6 +144,15 @@ await page.locator('[data-field="symptoms"] textarea').fill("暂时没有症状"
 await page.screenshot({ path: shot("05-card-desktop.png") });
 await page.locator(".medical-card-form > .button").click();
 await page.locator(".agent-grid").waitFor();
+await page.locator(".chat-composer input").fill("你是谁？");
+await page.locator(".chat-composer").evaluate((form) => form.requestSubmit());
+if (!/我是 Naru/.test(await page.locator(".message-naru").last().innerText())) throw new Error("Naru did not answer the identity question directly");
+const messageCountBeforeEducation = await page.locator(".message-naru").count();
+await page.locator(".chat-composer input").fill("失眠吃安眠药可以根治吗");
+await page.locator(".chat-composer").evaluate((form) => form.requestSubmit());
+await page.locator(".message-naru").nth(messageCountBeforeEducation).waitFor();
+if (!/科普一般医学知识/.test(await page.locator(".message-naru").last().innerText())) throw new Error("A medical knowledge question did not remain in the conversation");
+if (await page.locator(".hospital-panel,.emergency-confirm-panel").count()) throw new Error("A medical knowledge question incorrectly launched a care action");
 await page.locator(".chat-composer input").fill("就发高烧，看不见东西");
 await page.locator(".chat-composer").evaluate((form) => form.requestSubmit());
 await page.locator(".emergency-confirm-panel").waitFor({ timeout: 3000 });
