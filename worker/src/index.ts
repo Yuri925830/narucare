@@ -1100,6 +1100,13 @@ function parseTriageModelOutput(value: string) {
   } catch { return null; }
 }
 
+const WARM_REPLY_EMOJI = /(?:💙|🌿|🩺|😊|🤝|✨|💬|🤗|🙂|❤️)/u;
+
+function ensureWarmNonEmergencyReply(reply: string, intent: MedicalIntent) {
+  if (!reply || (intent !== "general" && intent !== "education") || WARM_REPLY_EMOJI.test(reply)) return reply;
+  return `${reply} ${intent === "education" ? "🩺 🌿" : "💙"}`;
+}
+
 async function chat(request: Request, env: Env) {
   await requireUser(request, env);
   const body = await readJson(request);
@@ -1141,9 +1148,10 @@ Do not diagnose with certainty. Do not invent examination findings. When details
   if (classified) {
     if (deterministic.intent === "education" && classified.intent !== "emergency") classified.intent = "education";
     if (classified.intent !== "hospital" && classified.intent !== "emergency") classified.symptoms = "";
+    classified.reply = ensureWarmNonEmergencyReply(classified.reply, classified.intent);
     return json({ ...classified, source: "ai_triage" });
   }
-  return json({ reply: output, intent: "general", symptoms: "", source: "ai_reply" });
+  return json({ reply: ensureWarmNonEmergencyReply(output, "general"), intent: "general", symptoms: "", source: "ai_reply" });
 }
 
 function toCompanion(row: CompanionRow): CompanionPayload {
