@@ -183,7 +183,9 @@ export function MedicalCardPage({ card, onSaved }: { card: MedicalCard | null; o
   const legacyCountry = form.nationality && !findCountry(form.nationality) ? form.nationality : "";
 
   return <Panel className="medical-card-panel">
-    <InfoBanner title={t("personalCard")} icon="shield" action={<div className="banner-character"><span className="soft-chip">{t("editable")}</span><NaruPose pose={4} className="medical-card-naru" /></div>}>{t("cardPrivacy")}</InfoBanner>
+    <InfoBanner title={t("personalCard")} icon="shield" action={<div className="banner-character">{saved && !editing
+      ? <Button type="button" variant="secondary" className="card-banner-edit" onClick={beginEditing}><BadgeCheck size={16} />{t("editCard")}</Button>
+      : <span className="soft-chip">{t("editable")}</span>}<NaruPose pose={4} className="medical-card-naru" /></div>}>{t("cardPrivacy")}</InfoBanner>
     {saved && <div className="bilingual-heading"><Languages size={20} /><div><strong>{t("bilingualCard")}</strong><small>{t("userLanguage")} · {localeOptions.find((item) => item.code === form.language)?.nativeName} / 한국어</small></div></div>}
     <form className="medical-card-form" onSubmit={submit}>
       {fields.map((field) => {
@@ -197,7 +199,7 @@ export function MedicalCardPage({ card, onSaved }: { card: MedicalCard | null; o
             {legacyCountry && <option value={legacyCountry}>{legacyCountry}</option>}
             {countryOptions.map((country) => <option key={country.code} value={country.code}>{country.flag} {country.nativeName}</option>)}
           </select> : options ? <select value={value} disabled={!editing} onChange={(event) => setForm({ ...form, [key]: event.target.value })}>{options.map(([optionValue, label]) => <option key={optionValue} value={optionValue}>{label}</option>)}</select> : "multiline" in field && field.multiline ? <textarea dir="auto" value={value} disabled={!editing} onChange={(event) => { if (key === "address") { addressEdited.current = true; addressRevision.current += 1; } setForm({ ...form, [key]: event.target.value }); }} placeholder={("placeholder" in field && field.placeholder) || ""} required={"required" in field && field.required} /> : <input dir="auto" type={("type" in field && field.type) || "text"} min={key === "age" ? 0 : undefined} max={key === "age" ? 120 : undefined} value={value} disabled={!editing} onChange={(event) => setForm({ ...form, [key]: event.target.value })} placeholder={("placeholder" in field && field.placeholder) || ""} required={"required" in field && field.required} />}
-          {key === "address" && <><Button type="button" variant="secondary" className="locate-address" onClick={() => { beginEditing(); addressEdited.current = false; void locateAddress(true); }} disabled={locating}><LocateFixed size={16} />{locating ? t("locating") : t("useCurrentLocation")}</Button><small className="address-help">{t("addressHelp")}{form.locationAccuracy ? ` · ${t("locationAccuracy", { accuracy: formatAccuracy(form.locationAccuracy) })}` : ""}</small><LocationPickerMap center={[form.latitude ?? 37.5665, form.longitude ?? 126.978]} accuracy={form.locationAccuracy} onPick={pickMapLocation} /><small className="address-help map-picker-help">{t("mapPickerHelp")}</small>{locationError && <small className="form-error" role="alert">{locationError}</small>}</>}
+          {key === "address" && <><Button type="button" variant="secondary" className="locate-address" onClick={() => { beginEditing(); addressEdited.current = false; void locateAddress(true); }} disabled={locating}><LocateFixed size={16} />{locating ? t("locating") : t("useCurrentLocation")}</Button><small className="address-help">{t("addressHelp")}{form.locationAccuracy ? ` · ${t("locationAccuracy", { accuracy: formatAccuracy(form.locationAccuracy) })}` : ""}</small><LocationPickerMap center={[form.latitude ?? 37.5665, form.longitude ?? 126.978]} accuracy={form.locationAccuracy} disabled={!editing} onPick={pickMapLocation} /><small className="address-help map-picker-help">{t("mapPickerHelp")}</small>{locationError && <small className="form-error" role="alert">{locationError}</small>}</>}
           {key === "symptoms" && <small className="address-help">{t("symptomsAutoFill")}</small>}
           {saved && <small className="korean-preview"><BadgeCheck size={13} />{form.korean?.[key] || localKoreanValue(key, value)}</small>}
         </label>;
@@ -205,8 +207,8 @@ export function MedicalCardPage({ card, onSaved }: { card: MedicalCard | null; o
       {error && <p className="form-error span-2">{error}</p>}
       <p className="card-footer"><ShieldCheck size={15} />{t("cardFooter")}</p>
       {saved && !editing
-        ? <Button type="button" onPointerDown={beginEditing} onClick={beginEditing}><BadgeCheck size={19} />{t("editCard")}</Button>
-        : <Button type="submit" disabled={saving || locating}><ShieldCheck size={19} />{saving || locating ? t("loading") : t("submitCard")}</Button>}
+        ? <Button key="edit-card" type="button" onClick={(event) => { event.preventDefault(); beginEditing(); }}><BadgeCheck size={19} />{t("editCard")}</Button>
+        : <Button key="save-card" type="submit" disabled={saving || locating}><ShieldCheck size={19} />{saving || locating ? t("loading") : t("submitCard")}</Button>}
     </form>
   </Panel>;
 }

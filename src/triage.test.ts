@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { assessMedicalIntent, hasMedicalSymptoms, isAffirmativeResponse, isMedicalKnowledgeQuestion, isNaruCapabilityQuestion, isNaruIdentityQuestion, isNegativeResponse } from "./triage";
+import { assessMedicalIntent, extractReportableSymptoms, hasMedicalSymptoms, isAffirmativeResponse, isHospitalCommandWithoutSymptoms, isMedicalKnowledgeQuestion, isNaruCapabilityQuestion, isNaruIdentityQuestion, isNegativeResponse } from "./triage";
 
 describe("medical triage", () => {
   it.each([
@@ -42,6 +42,16 @@ describe("medical triage", () => {
     expect(result.intent).toBe("hospital");
     expect(result.reason).toBe("hospital_request");
     expect(result.symptoms).toBe("");
+    expect(extractReportableSymptoms("附近医院")).toBe("");
+    expect(isHospitalCommandWithoutSymptoms("附近医院")).toBe(true);
+  });
+
+  it("keeps service commands out of the medical card and 119 symptom broadcast", () => {
+    expect(extractReportableSymptoms("帮我找附近医院")).toBe("");
+    expect(extractReportableSymptoms("呼叫119")).toBe("");
+    expect(extractReportableSymptoms("我现在无法呼吸，很痛苦")).toContain("无法呼吸");
+    expect(extractReportableSymptoms("帮我找附近医院，我肚子疼")).toBe("我肚子疼");
+    expect(extractReportableSymptoms("呼叫119，我无法呼吸")).toBe("我无法呼吸");
   });
 
   it("marks a symptom report as requiring consent rather than an explicit hospital request", () => {

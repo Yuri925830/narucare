@@ -202,6 +202,13 @@ export const en = {
   startNavigation: "Start navigation",
   navigationRoute: "Navigation route",
   destination: "Destination",
+  hospitalAddress: "Hospital address",
+  copyAddress: "Copy",
+  addressCopied: "Copied",
+  taxiAddressTitle: "Taking a taxi?",
+  taxiAddressTip: "Copy the hospital address above, open Kakao T or Uber, and paste it if the destination is not filled automatically.",
+  mapNavigationApps: "Map navigation",
+  taxiApps: "Taxi apps",
   walking: "Walking {minutes} min · {distance}",
   estimatedArrival: "Estimated arrival",
   routeStatus: "Route status",
@@ -463,12 +470,56 @@ const zh: Messages = {
   brandSub: "Agentic AI 医疗就诊助手", chooseLanguage: "选择语言", languageSubtitle: "界面和 Naru 的对话语言会同步切换。", naruSpeaks: "Naru 会说", useLanguage: "使用{language}继续", afterLoginSwitch: "登录后也可以随时从右上角切换。",
   welcomeBack: "欢迎回来", loginSubtitle: "登录后，Naru 会继续陪您完成就医流程。", accountId: "账号 ID", enterId: "请输入您的 ID", password: "密码", enterPassword: "至少 6 位密码", login: "登录", noAccount: "还没有账号？", registerNow: "立即注册", createAccount: "创建账号", registerSubtitle: "无需手机号或邮箱，轻松开始。", privacyTitle: "不收集个人信息", privacyDesc: "注册账号时不会收集您的个人信息，您只需要随意输入 ID 和密码，即可成功注册并自动登录，流程并不困难！", confirmPassword: "确认密码", confirmPasswordPh: "请再次输入密码", registerLogin: "注册并自动登录", hasAccount: "已有账号？", goLogin: "去登录", encrypted: "密码加盐加密保存 · 不绑定手机号或邮箱", authFailed: "账号或密码不正确。", idTaken: "这个 ID 已经注册。", passwordMismatch: "两次输入的密码不一致。", passwordShort: "请输入至少 6 位密码。",
   navCard: "就诊卡", navNaru: "Naru", navFlow: "就诊流程", navEmergency: "紧急呼叫", navProfile: "我的", privacyProtected: "隐私保护中", currentStatus: "当前状态", cardNotCreated: "尚未建立 · 服务受限", cardCreated: "已建立 · {name}", emergencyOnly: "紧急呼叫仍可使用", quickServices: "快捷服务", findHospital: "寻找医院", viewVisitFlow: "查看就诊流程", translation: "翻译对话", companion: "真人陪诊", locked: "锁定", newUser: "新用户", cardMissingShort: "就诊卡尚未建立",
-  naruGreeting: "Hi，我是Naru，您的医疗全能助手！我可以帮您快速建立或修改就诊卡，分析您的身体情况，如果情况危急，我会提供紧急呼叫救护车的帮助，如果需要就医，我可以向您介绍去韩国医院就诊流程以及相关需要携带的证件，还可以根据您现在的位置寻找近距离的合适的医院，以及帮助您和医院人员进行沟通上的翻译！如果您需要真人陪诊师，我会帮您找到最符合条件的陪诊师，全程录音为您保驾护航！如果您现在感到不舒服，告诉我是什么样的感觉，别担心，我会一步一步帮助您！", naruReady: "Hi，{name}！如果您现在感到不舒服，告诉我是什么样的感觉，别担心，我会一步一步帮助您！", naruIdentityAnswer: "我是 Naru，专为在韩国生活或来韩就医的外国人设计的 AI 医疗辅助伙伴。我既可以和您自然聊天、科普一般医学知识，也能识别您是在描述此刻正在发生的个人症状，再帮助您选择合适的下一步。", naruCapabilitiesAnswer: "我可以和您闲聊，用容易理解的方式科普疾病与药物知识，分析当前症状中的危急信号，寻找合适的附近医院，介绍韩国就诊流程，进行实时翻译，匹配真人陪诊师，并在必要时协助呼叫 119。", medicalEducationFallback: "我可以为您科普一般医学知识，但不能仅凭聊天作出诊断，也不建议在没有医生指导的情况下自行调整处方药。请告诉我您想了解的疾病或药物；如果是您现在正在不舒服，也请告诉我持续多久、严重程度和其他症状。", medicalEducationBoundary: "以上是一般医学信息，不能替代医生诊断；处方药请勿在没有医生或药师指导的情况下自行开始、停用或调整剂量。", naruConversationFallback: "我在这里。您可以像平常一样和我聊天、询问医学知识，也可以描述自己此刻正在发生的症状；需要更多信息时，我会一步一步询问。", hospitalConsentPrompt: "我已经整理并保存了您刚才描述的症状。要不要去附近医院？如果您愿意，我现在就帮您寻找附近可接诊的医院。", hospitalOfferDeclined: "好的，暂时不寻找医院。如果症状加重、持续不缓解，或出现呼吸困难、剧烈疼痛等危险信号，请立即告诉我。", inputPlaceholder: "描述您的症状或需要…", promptUnwell: "我现在不舒服", promptCard: "帮我建立就诊卡", promptCompanion: "我需要真人陪诊", privateConversation: "隐私对话",
+  naruGreeting: `## 👋 Hi，我是 Naru，您的 AI 医疗就诊助手！
+
+很高兴为您服务！在韩国生活期间，如果您身体不舒服、不知道该去哪里看病，或者担心语言沟通问题，请不要紧张。
+**告诉我您现在的情况，我会一步一步陪您处理。** 💙
+
+### 🪪 就诊信息管理
+
+我可以帮助您快速创建、查看或修改就诊卡，整理个人信息、既往病史、过敏情况和正在服用的药物，让就医准备更加方便。
+
+### 🩺 身体状况初步判断
+
+您可以告诉我哪里不舒服、症状持续了多久，以及是否伴有发烧、疼痛或呼吸困难等情况。
+我会帮助您梳理症状，初步判断是否建议就医，并推荐更合适的科室。
+
+### 🚨 紧急情况处理
+
+如果您的症状可能比较危急，我会立即提醒您采取紧急措施，并协助您了解如何拨打韩国急救电话 **119** 或前往急诊室。
+
+### 🏥 韩国医院就诊指南
+
+需要去医院时，我会向您介绍完整的就诊流程，包括：
+
+**挂号 → 填写初诊表 → 等待叫号 → 医生问诊 → 缴费 → 领取处方 → 前往药店取药**
+
+我还会提醒您准备外国人登录证、护照、健康保险信息、用药记录和既往检查资料等必要材料。
+
+### 📍 附近医院推荐
+
+根据您所在的位置和身体症状，我可以帮助您寻找距离较近、科室合适的医院，并整理医院地址、联系方式、营业时间及是否需要预约等信息。
+
+### 🌏 中韩医疗沟通翻译
+
+不用担心韩语表达不清楚！
+我可以将您的中文症状整理成医生容易理解的韩语，也可以把医护人员的韩语说明翻译成中文，帮助您理解检查内容、诊断说明、用药方法和复诊要求。
+
+### 🤝 真人陪诊服务
+
+需要线下协助时，我也可以帮助您寻找条件合适的真人陪诊师，陪您完成挂号、问诊、检查和取药等流程。经您同意后，还可记录重要沟通内容，方便您之后查看和确认。
+
+---
+
+## 💬 您现在感觉哪里不舒服？
+
+请告诉我您的症状、持续时间和严重程度。
+**别担心，Naru 会陪着您，一步一步解决。** 🌿`, naruReady: "Hi，{name}！如果您现在感到不舒服，告诉我是什么样的感觉，别担心，我会一步一步帮助您！", naruIdentityAnswer: "我是 Naru，专为在韩国生活或来韩就医的外国人设计的 AI 医疗辅助伙伴。我既可以和您自然聊天、科普一般医学知识，也能识别您是在描述此刻正在发生的个人症状，再帮助您选择合适的下一步。", naruCapabilitiesAnswer: "我可以和您闲聊，用容易理解的方式科普疾病与药物知识，分析当前症状中的危急信号，寻找合适的附近医院，介绍韩国就诊流程，进行实时翻译，匹配真人陪诊师，并在必要时协助呼叫 119。", medicalEducationFallback: "我可以为您科普一般医学知识，但不能仅凭聊天作出诊断，也不建议在没有医生指导的情况下自行调整处方药。请告诉我您想了解的疾病或药物；如果是您现在正在不舒服，也请告诉我持续多久、严重程度和其他症状。", medicalEducationBoundary: "以上是一般医学信息，不能替代医生诊断；处方药请勿在没有医生或药师指导的情况下自行开始、停用或调整剂量。", naruConversationFallback: "我在这里。您可以像平常一样和我聊天、询问医学知识，也可以描述自己此刻正在发生的个人症状；需要更多信息时，我会一步一步询问。", hospitalConsentPrompt: "我已经整理并保存了您刚才描述的症状。要不要去附近医院？如果您愿意，我现在就帮您寻找附近可接诊的医院。", hospitalOfferDeclined: "好的，暂时不寻找医院。如果症状加重、持续不缓解，或出现呼吸困难、剧烈疼痛等危险信号，请立即告诉我。", inputPlaceholder: "描述您的症状或需要…", promptUnwell: "我现在不舒服", promptCard: "帮我建立就诊卡", promptCompanion: "我需要真人陪诊", privateConversation: "隐私对话",
   cardRequired: "亲爱的用户，请您先建立就诊卡，这样我可以更好地为您提供所有服务！如果您现在情况非常紧急，请直接按左侧导航栏的“紧急呼叫”按钮，我会帮您直接联系119，呼叫救护车！", createCardNow: "立即建立就诊卡", urgentCall119: "情况紧急，呼叫 119", cardGateHint: "除紧急呼叫外，其他功能将在建卡后开放。",
   createCard: "建立就诊卡", personalCard: "建立个人就诊卡", cardPrivacy: "就诊卡帮助 Naru 在紧急情况、医院推荐和翻译中更准确地协助您。信息仅用于医疗辅助。", editable: "保存后可修改", name: "姓名 / 称呼", nationality: "国籍", residentialAddress: "现在住址（选填）", addressOptional: "选填，可补充道路门牌、建筑物名称、邮编、楼层或房号", useCurrentLocation: "使用当前位置", addressHelp: "授权后会使用高精度定位，并在地图数据提供时填入道路门牌、建筑物名称和邮编；您仍可手动修改或补充楼层、房号。", mapPickerHelp: "拖动或缩放地图，把中心定位点放到准确入口；上方住址会自动更新，楼层或房号仍可手动补充。", age: "年龄", gender: "性别", female: "女", male: "男", other: "其他 / 不愿透露", documentType: "证件类型", passport: "护照", alienRegistration: "外国人登录证", documentNumber: "证件号码", insurance: "韩国健康保险", yes: "有", no: "无", conditions: "慢性病 / 过敏史", medications: "目前服用药物", surgeries: "既往手术 / 重要病史", notes: "其他备注", none: "无", primaryLanguage: "主要翻译语言", submitCard: "提交并保存就诊卡", cardFooter: "所有字段都可以在“就诊卡”中随时修改。", bilingualCard: "用户语言 + 韩语双语就诊卡", userLanguage: "用户语言", korean: "韩语", editCard: "编辑", saveSuccess: "就诊卡已保存。",
   analyzing: "Naru 正在结合症状、就诊卡与当前位置进行分析", analyzingText: "正在查找附近的综合医院，不会擅自假设症状…", nearbyHospitals: "附近医院", analysisResult: "Naru 的分析结果", hospitalNotice: "经过分析，我为您找到了附近可以接受治疗的医院，但请您一定先查看“就诊流程”！", currentLocation: "当前位置", locating: "正在获取位置…", locationDenied: "无法获取位置，您可以重新授权或刷新位置。", refreshLocation: "刷新位置", nearbyAccepting: "附近可接诊医院", bestMatch: "最合适", emergencyDept: "急诊", available: "可接诊", openingHoursLabel: "营业时间", restDaysLabel: "休息日", noFixedRestDay: "无固定休息日", hoursUnverified: "未公开营业时间 · 请电话确认", restDaysUnverified: "未公开休息日", reservationLabel: "预约", reservationRequired: "必须预约", reservationRecommended: "建议预约", reservationNotRequired: "可直接到院", reservationUnverified: "请电话确认", openNow: "当前营业中", closedNow: "当前已休息", openStatusUnverified: "当前营业状态待核验", hospitalDataSource: "数据来源：{source}", verifiedDate: "核验于 {date}", hiraOfficialLabel: "HIRA 官方核验", hiraSpecialists: "{count} 名专科医生", distanceAway: "距离 {distance}", selectHospital: "选择医院", route: "导航路线",
   visitPrepare: "去医院前先准备", prepareSubtitle: "Naru 已根据外国人在韩国就医的常见流程，为您整理好关键事项。", confirmBefore: "建议出发前确认", idPassport: "外国人登录证 / 护照", idPassportDesc: "用于挂号和身份确认", insuranceInfo: "健康保险信息", insuranceInfoDesc: "有医保请同时携带", medicationItem: "正在服用的药物", medicationDesc: "药盒、处方或药物照片", previousResults: "以前的检查结果", previousResultsDesc: "如与当前症状有关", afterArrival: "到达医院后", stepRegister: "前台挂号", stepRegisterDesc: "出示证件并说明首次就诊", stepForm: "填写初诊表", stepFormDesc: "症状、过敏史和用药情况", stepWait: "等待叫号", stepWaitDesc: "留意屏幕或工作人员通知", stepRoom: "进入诊室", stepRoomDesc: "可打开 Naru 翻译对话", stepPay: "缴费取药", stepPayDesc: "领取处方后前往药店", flowReminder: "等下到了医院忘了就诊流程也别担心，随时点击导航栏的“就诊流程”查看！", startNavigation: "开始导航",
-  navigationRoute: "导航路线", destination: "目的地", walking: "步行 {minutes} 分钟 · {distance}", estimatedArrival: "预计到达", routeStatus: "路线状态", inProgress: "进行中", autoTranslation: "到院后自动衔接", arrivalTip: "确认到达后，Naru 会立即打开翻译对话，帮助您与前台和医务人员沟通。", arrived: "我已到达", openTranslation: "现在打开翻译", externalNavigation: "打开逐向导航", walkingMode: "步行", transitMode: "公共交通", drivingMode: "驾车", routeSummary: "{mode} · {minutes} 分钟 · {distance}", routePreviewUnavailable: "请用下方 Naver Maps、Google Maps 或 Kakao Maps 查看实时路线", noHospitalsFound: "暂未获取到附近医院数据", hospitalSearchFailed: "请刷新位置或重试。Naru 不会把无关地区的医院伪装成附近医院。",
+  navigationRoute: "导航路线", destination: "目的地", hospitalAddress: "医院具体地址", copyAddress: "一键复制", addressCopied: "已复制", taxiAddressTitle: "需要打车？", taxiAddressTip: "请先一键复制上方医院地址；跳转 Kakao T 或 Uber 后，如果没有自动带入目的地，直接粘贴即可。", mapNavigationApps: "地图导航", taxiApps: "打车软件", walking: "步行 {minutes} 分钟 · {distance}", estimatedArrival: "预计到达", routeStatus: "路线状态", inProgress: "进行中", autoTranslation: "到院后自动衔接", arrivalTip: "确认到达后，Naru 会立即打开翻译对话，帮助您与前台和医务人员沟通。", arrived: "我已到达", openTranslation: "现在打开翻译", externalNavigation: "打开逐向导航", walkingMode: "步行", transitMode: "公共交通", drivingMode: "驾车", routeSummary: "{mode} · {minutes} 分钟 · {distance}", routePreviewUnavailable: "请用下方 Naver Maps、Google Maps 或 Kakao Maps 查看实时路线", noHospitalsFound: "暂未获取到附近医院数据", hospitalSearchFailed: "请刷新位置或重试。Naru 不会把无关地区的医院伪装成附近医院。",
   translationConversation: "翻译对话", patientLanguage: "患者 · {language}", hospitalLanguage: "医院 · 韩语", youSaid: "您说", medicalStaff: "医院人员", naruTranslatedKorean: "Naru 翻译为韩语", naruTranslatedUser: "Naru 翻译为您的语言", samplePatient: "我从今天早上开始肚子很痛，一直腹泻，还吐了。我今天吃过海鲜。", samplePatientKo: "오늘 아침부터 배가 많이 아프고 설사와 구토를 했습니다. 오늘 해산물을 먹었습니다.", sampleStaffKo: "해산물을 드셨나요? 열은 있습니까?", sampleStaffUser: "您吃过海鲜吗？有发烧吗？", translationInput: "输入文字，或按住话筒说话", tapToSpeak: "点击说话", listening: "正在聆听…点击停止", translateSend: "翻译", transcribingVoice: "正在识别语音…", voiceUnavailable: "语音识别暂不可用，请检查网络或改用文字输入。", microphoneDenied: "麦克风权限被拒绝，请在浏览器设置中允许麦克风后重试。",
   companionsNotice: "真人陪诊须知", beforeCompanion: "在寻找陪诊师之前", beforeCompanionDesc: "请先确认服务边界、安全保护和费用规则。Naru 会在整个流程中继续协助您。", companionRule1: "陪诊师提供流程与语言协助", companionRule1Desc: "陪诊师不是医生，不进行诊断或治疗。", companionRule2: "服务过程可全程录音", companionRule2Desc: "录音用于安全保护和服务争议核对。", companionRule3: "价格与时间二次确认", companionRule3Desc: "下单前会再次展示服务费、定金和取消规则。", companionRule4: "紧急情况优先拨打 119", companionRule4Desc: "危及生命时不应等待陪诊师到达。", agreeNotice: "我已阅读并理解以上内容", findCompanion: "确认，去寻找陪诊师",
   companionConditions: "陪诊师条件", tellPreferences: "告诉 Naru 您的偏好", preciseMatch: "Naru 会综合筛选条件与实时距离进行匹配。", any: "不限", genderPreference: "性别偏好", nationalityPreference: "国籍偏好", ageRange: "年龄范围", arrivalTime: "多久内到达", spokenLanguages: "擅长语言", minimumRating: "最低评价", priceRange: "价格范围", withinHour: "1 小时内", fourPlus: "4 星以上", aiMatch: "AI 智能匹配", matchesFound: "{count} 位陪诊师",

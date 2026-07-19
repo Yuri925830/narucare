@@ -412,7 +412,14 @@
     "serviceTimeEndedDesc": "Elige si deseas finalizar el servicio ahora o extenderlo 30 minutos. La facturación se basa en la duración real final del servicio, con un mínimo de una hora.",
     "mapPickerHelp": "Arrastre o amplíe el mapa para colocar el marcador central en la entrada exacta. La dirección anterior se actualiza automáticamente; Aún puedes agregar un piso o unidad manualmente.",
     "hiraOfficialLabel": "oficial de HIRA",
-    "hiraSpecialists": "{count} especialistas"
+    "hiraSpecialists": "{count} especialistas",
+    "hospitalAddress": "Dirección del hospital",
+    "copyAddress": "Copiar",
+    "addressCopied": "Copiado",
+    "taxiAddressTitle": "¿Tomar un taxi?",
+    "taxiAddressTip": "Copie la dirección del hospital arriba, abra Kakao T o Uber y péguela si el destino no se completa automáticamente.",
+    "mapNavigationApps": "Navegación por mapa",
+    "taxiApps": "Aplicaciones de taxi"
   },
   "fr": {
     "brandSub": "Assistant de visite médicale IA agentique",
@@ -827,7 +834,14 @@
     "serviceTimeEndedDesc": "Choisissez si vous souhaitez mettre fin au service maintenant ou le prolonger de 30 minutes. La facturation est basée sur la durée finale réelle de la prestation, avec un minimum d'une heure.",
     "mapPickerHelp": "Faites glisser ou zoomez sur la carte pour placer l'épingle centrale sur l'entrée exacte. L'adresse ci-dessus est mise à jour automatiquement ; vous pouvez toujours ajouter un étage ou une unité manuellement.",
     "hiraOfficialLabel": "Officiel HIRA",
-    "hiraSpecialists": "{count} spécialistes"
+    "hiraSpecialists": "{count} spécialistes",
+    "hospitalAddress": "Adresse de l'hôpital",
+    "copyAddress": "Copier",
+    "addressCopied": "Copié",
+    "taxiAddressTitle": "Prendre un taxi ?",
+    "taxiAddressTip": "Copiez l'adresse de l'hôpital ci-dessus, ouvrez Kakao T ou Uber et collez-la si la destination n'est pas renseignée automatiquement.",
+    "mapNavigationApps": "Navigation par carte",
+    "taxiApps": "Applications de taxis"
   },
   "de": {
     "brandSub": "Agentischer KI-Assistent für medizinische Besuche",
@@ -1242,7 +1256,14 @@
     "serviceTimeEndedDesc": "Wählen Sie, ob Sie den Dienst jetzt beenden oder um 30 Minuten verlängern möchten. Die Abrechnung basiert auf der endgültigen tatsächlichen Leistungsdauer, mit einem Minimum von einer Stunde.",
     "mapPickerHelp": "Ziehen oder zoomen Sie die Karte, um den mittleren Stift genau am Eingang zu platzieren. Die obige Adresse wird automatisch aktualisiert; Sie können eine Etage oder Einheit weiterhin manuell hinzufügen.",
     "hiraOfficialLabel": "HIRA-Beamter",
-    "hiraSpecialists": "{count} Spezialisten"
+    "hiraSpecialists": "{count} Spezialisten",
+    "hospitalAddress": "Krankenhausadresse",
+    "copyAddress": "Kopieren",
+    "addressCopied": "Kopiert",
+    "taxiAddressTitle": "Ein Taxi nehmen?",
+    "taxiAddressTip": "Kopieren Sie die Adresse des Krankenhauses oben, öffnen Sie Kakao T oder Uber und fügen Sie sie ein, wenn das Ziel nicht automatisch ausgefüllt wird.",
+    "mapNavigationApps": "Kartennavigation",
+    "taxiApps": "Taxi-Apps"
   },
   "pt-BR": {
     "brandSub": "Assistente de visita médica Agentic AI",
@@ -1657,7 +1678,14 @@
     "serviceTimeEndedDesc": "Escolha se deseja encerrar o serviço agora ou estendê-lo por 30 minutos. A faturação baseia-se na duração real final do serviço, com um mínimo de uma hora.",
     "mapPickerHelp": "Arraste ou amplie o mapa para colocar o alfinete central na entrada exata. O endereço acima é atualizado automaticamente; você ainda pode adicionar um piso ou unidade manualmente.",
     "hiraOfficialLabel": "Oficial HIRA",
-    "hiraSpecialists": "{count} especialistas"
+    "hiraSpecialists": "{count} especialistas",
+    "hospitalAddress": "Endereço do hospital",
+    "copyAddress": "Copiar",
+    "addressCopied": "Copiado",
+    "taxiAddressTitle": "Pegando um táxi?",
+    "taxiAddressTip": "Copie o endereço do hospital acima, abra Kakao T ou Uber e cole caso o destino não seja preenchido automaticamente.",
+    "mapNavigationApps": "Navegação no mapa",
+    "taxiApps": "Aplicativos de táxi"
   },
   "ru": {
     "brandSub": "Агент-помощник по посещению врача с искусственным интеллектом",
@@ -2072,7 +2100,14 @@
     "serviceTimeEndedDesc": "Выберите, прекратить ли услугу сейчас или продлить ее на 30 минут. Выставление счетов основано на окончательной фактической продолжительности услуги, минимум один час.",
     "mapPickerHelp": "Перетащите или увеличьте карту, чтобы поместить центральную булавку точно на вход. Указанный выше адрес обновляется автоматически; вы по-прежнему можете добавить этаж или объект вручную.",
     "hiraOfficialLabel": "Официальный представитель HIRA",
-    "hiraSpecialists": "{count} специалистов"
+    "hiraSpecialists": "{count} специалистов",
+    "hospitalAddress": "Адрес больницы",
+    "copyAddress": "Копировать",
+    "addressCopied": "Скопировано",
+    "taxiAddressTitle": "Берете такси?",
+    "taxiAddressTip": "Скопируйте адрес больницы выше, откройте Kakao T или Uber и вставьте его, если пункт назначения не заполнен автоматически.",
+    "mapNavigationApps": "Карта навигации",
+    "taxiApps": "Приложения для такси"
   },
   "ar": {
     "brandSub": "مساعد الزيارة الطبية للوكيل AI",
@@ -2487,7 +2522,14 @@
     "serviceTimeEndedDesc": "اختر ما إذا كنت تريد إنهاء الخدمة الآن أو تمديدها لمدة 30 دقيقة. تعتمد الفاتورة على مدة الخدمة الفعلية النهائية، بحد أدنى ساعة واحدة.",
     "mapPickerHelp": "قم بسحب الخريطة أو تكبيرها/تصغيرها لوضع الدبوس الأوسط على المدخل المحدد. يتم تحديث العنوان أعلاه تلقائيًا؛ لا يزال بإمكانك إضافة طابق أو وحدة يدويًا.",
     "hiraOfficialLabel": "هيرا الرسمية",
-    "hiraSpecialists": "{count} متخصصون"
+    "hiraSpecialists": "{count} متخصصون",
+    "hospitalAddress": "عنوان المستشفى",
+    "copyAddress": "نسخ",
+    "addressCopied": "منقول",
+    "taxiAddressTitle": "أخذ سيارة أجرة؟",
+    "taxiAddressTip": "انسخ عنوان المستشفى أعلاه، وافتح Kakao T أو Uber، والصقه إذا لم يتم ملء الوجهة تلقائيًا.",
+    "mapNavigationApps": "التنقل على الخريطة",
+    "taxiApps": "تطبيقات سيارات الأجرة"
   },
   "hi": {
     "brandSub": "एजेंट एआई मेडिकल विजिट सहायक",
@@ -2902,7 +2944,14 @@
     "serviceTimeEndedDesc": "चुनें कि सेवा को अभी समाप्त करना है या इसे 30 मिनट तक बढ़ाना है। बिलिंग अंतिम वास्तविक सेवा अवधि पर आधारित होती है, न्यूनतम एक घंटे की।",
     "mapPickerHelp": "केंद्र पिन को सटीक प्रवेश द्वार पर लगाने के लिए मानचित्र को खींचें या ज़ूम करें। उपरोक्त पता स्वचालित रूप से अपडेट हो जाता है; आप अभी भी मैन्युअल रूप से एक फर्श या इकाई जोड़ सकते हैं।",
     "hiraOfficialLabel": "हीरा अधिकारी",
-    "hiraSpecialists": "{count} विशेषज्ञ"
+    "hiraSpecialists": "{count} विशेषज्ञ",
+    "hospitalAddress": "अस्पताल का पता",
+    "copyAddress": "प्रतिलिपि",
+    "addressCopied": "नकल की गई",
+    "taxiAddressTitle": "टैक्सी ले रहे हैं?",
+    "taxiAddressTip": "उपरोक्त अस्पताल का पता कॉपी करें, काकाओ टी या उबर खोलें, और यदि गंतव्य स्वचालित रूप से नहीं भरा गया है तो इसे पेस्ट करें।",
+    "mapNavigationApps": "मानचित्र नेविगेशन",
+    "taxiApps": "टैक्सी ऐप्स"
   },
   "id": {
     "brandSub": "Asisten kunjungan medis AI agen",
@@ -3317,7 +3366,14 @@
     "serviceTimeEndedDesc": "Pilih apakah akan mengakhiri layanan sekarang atau memperpanjangnya selama 30 menit. Penagihan didasarkan pada durasi layanan aktual akhir, dengan minimum satu jam.",
     "mapPickerHelp": "Seret atau perbesar peta untuk menempatkan pin tengah tepat di pintu masuk. Alamat di atas diperbarui secara otomatis; Anda masih dapat menambahkan lantai atau unit secara manual.",
     "hiraOfficialLabel": "pejabat HIRA",
-    "hiraSpecialists": "{count} spesialis"
+    "hiraSpecialists": "{count} spesialis",
+    "hospitalAddress": "Alamat rumah sakit",
+    "copyAddress": "Salin",
+    "addressCopied": "Disalin",
+    "taxiAddressTitle": "Naik taksi?",
+    "taxiAddressTip": "Copy alamat rumah sakit di atas, buka Kakao T atau Uber, dan paste jika tujuan tidak terisi otomatis.",
+    "mapNavigationApps": "Navigasi peta",
+    "taxiApps": "Aplikasi taksi"
   },
   "vi": {
     "brandSub": "Trợ lý thăm khám y tế AI của Agentic",
@@ -3732,7 +3788,14 @@
     "serviceTimeEndedDesc": "Chọn kết thúc dịch vụ ngay bây giờ hoặc kéo dài thêm 30 phút. Việc thanh toán được tính dựa trên thời gian sử dụng dịch vụ thực tế cuối cùng, tối thiểu là một giờ.",
     "mapPickerHelp": "Kéo hoặc thu phóng bản đồ để đặt chốt ở giữa vào lối vào chính xác. Địa chỉ trên được cập nhật tự động; bạn vẫn có thể thêm tầng hoặc căn hộ theo cách thủ công.",
     "hiraOfficialLabel": "HIRA chính thức",
-    "hiraSpecialists": "{count} chuyên gia"
+    "hiraSpecialists": "{count} chuyên gia",
+    "hospitalAddress": "Địa chỉ bệnh viện",
+    "copyAddress": "Sao chép",
+    "addressCopied": "Đã sao chép",
+    "taxiAddressTitle": "Đi taxi à?",
+    "taxiAddressTip": "Sao chép địa chỉ bệnh viện ở trên, mở Kakao T hoặc Uber và dán nếu điểm đến không được điền tự động.",
+    "mapNavigationApps": "Điều hướng bản đồ",
+    "taxiApps": "Ứng dụng taxi"
   },
   "th": {
     "brandSub": "ผู้ช่วยเข้ารับการตรวจทางการแพทย์ Agentic AI",
@@ -4147,7 +4210,14 @@
     "serviceTimeEndedDesc": "เลือกว่าจะสิ้นสุดบริการทันทีหรือขยายเวลาอีก 30 นาที การเรียกเก็บเงินจะขึ้นอยู่กับระยะเวลาการให้บริการจริงขั้นสุดท้าย โดยมีขั้นต่ำหนึ่งชั่วโมง",
     "mapPickerHelp": "ลากหรือซูมแผนที่เพื่อวางหมุดตรงกลางตรงทางเข้า ที่อยู่ด้านบนจะอัปเดตโดยอัตโนมัติ คุณยังสามารถเพิ่มชั้นหรือยูนิตได้ด้วยตนเอง",
     "hiraOfficialLabel": "อย่างเป็นทางการของ HIRA",
-    "hiraSpecialists": "ผู้เชี่ยวชาญ {count} คน"
+    "hiraSpecialists": "ผู้เชี่ยวชาญ {count} คน",
+    "hospitalAddress": "ที่อยู่โรงพยาบาล",
+    "copyAddress": "คัดลอก",
+    "addressCopied": "คัดลอกแล้ว",
+    "taxiAddressTitle": "นั่งแท็กซี่เหรอ?",
+    "taxiAddressTip": "คัดลอกที่อยู่โรงพยาบาลด้านบน เปิด Kakao T หรือ Uber แล้ววางหากปลายทางไม่ได้รับการกรอกโดยอัตโนมัติ",
+    "mapNavigationApps": "การนำทางแผนที่",
+    "taxiApps": "แอพแท็กซี่"
   },
   "tr": {
     "brandSub": "Ajan AI tıbbi ziyaret asistanı",
@@ -4562,7 +4632,14 @@
     "serviceTimeEndedDesc": "Hizmeti şimdi sonlandırmayı veya 30 dakika uzatmayı seçin. Faturalandırma, minimum bir saatlik olmak üzere nihai fiili hizmet süresine göre yapılır.",
     "mapPickerHelp": "Ortadaki raptiyeyi tam girişe yerleştirmek için haritayı sürükleyin veya yakınlaştırın. Yukarıdaki adres otomatik olarak güncellenir; yine de manuel olarak bir kat veya ünite ekleyebilirsiniz.",
     "hiraOfficialLabel": "HIRA yetkilisi",
-    "hiraSpecialists": "{count} uzman"
+    "hiraSpecialists": "{count} uzman",
+    "hospitalAddress": "Hastane adresi",
+    "copyAddress": "Kopyala",
+    "addressCopied": "Kopyalandı",
+    "taxiAddressTitle": "Taksiye binmek mi?",
+    "taxiAddressTip": "Yukarıdaki hastane adresini kopyalayın, Kakao T veya Uber'i açın ve varış noktası otomatik olarak doldurulmazsa yapıştırın.",
+    "mapNavigationApps": "Harita navigasyonu",
+    "taxiApps": "Taksi uygulamaları"
   },
   "it": {
     "brandSub": "Assistente alla visita medica Agentic AI",
@@ -4977,7 +5054,14 @@
     "serviceTimeEndedDesc": "Scegli se terminare adesso il servizio o prolungarlo di 30 minuti. La fatturazione si basa sulla durata effettiva del servizio finale, con un minimo di un'ora.",
     "mapPickerHelp": "Trascina o ingrandisci la mappa per posizionare il segnaposto centrale sull'ingresso esatto. L'indirizzo sopra si aggiorna automaticamente; puoi comunque aggiungere manualmente un piano o un'unità.",
     "hiraOfficialLabel": "Funzionario dell'HIRA",
-    "hiraSpecialists": "{count} specialisti"
+    "hiraSpecialists": "{count} specialisti",
+    "hospitalAddress": "Indirizzo dell'ospedale",
+    "copyAddress": "Copia",
+    "addressCopied": "Copiato",
+    "taxiAddressTitle": "Prendere un taxi?",
+    "taxiAddressTip": "Copia l'indirizzo dell'ospedale sopra, apri Kakao T o Uber e incollalo se la destinazione non viene compilata automaticamente.",
+    "mapNavigationApps": "Navigazione della mappa",
+    "taxiApps": "App per taxi"
   },
   "nl": {
     "brandSub": "Agent AI medische bezoekassistent",
@@ -5392,7 +5476,14 @@
     "serviceTimeEndedDesc": "Kies of u de service nu wilt beëindigen of met 30 minuten wilt verlengen. Facturering is gebaseerd op de uiteindelijke werkelijke serviceduur, met een minimum van één uur.",
     "mapPickerHelp": "Versleep of zoom op de kaart om de middelste pin op de exacte ingang te plaatsen. Het bovenstaande adres wordt automatisch bijgewerkt; U kunt nog steeds handmatig een verdieping of unit toevoegen.",
     "hiraOfficialLabel": "HIRA-functionaris",
-    "hiraSpecialists": "{count} specialisten"
+    "hiraSpecialists": "{count} specialisten",
+    "hospitalAddress": "Ziekenhuis adres",
+    "copyAddress": "Kopieer",
+    "addressCopied": "Gekopieerd",
+    "taxiAddressTitle": "Een taxi nemen?",
+    "taxiAddressTip": "Kopieer het bovenstaande ziekenhuisadres, open Kakao T of Uber en plak het als de bestemming niet automatisch wordt gevuld.",
+    "mapNavigationApps": "Kaartnavigatie",
+    "taxiApps": "Taxi-apps"
   },
   "pl": {
     "brandSub": "Asystent wizyty lekarskiej agenta AI",
@@ -5807,7 +5898,14 @@
     "serviceTimeEndedDesc": "Wybierz, czy zakończyć usługę teraz, czy przedłużyć ją o 30 minut. Rozliczenie jest naliczane na podstawie ostatecznego rzeczywistego czasu trwania usługi, przy czym minimalny czas wynosi jedną godzinę.",
     "mapPickerHelp": "Przeciągnij lub powiększ mapę, aby umieścić środkową pinezkę dokładnie przy wejściu. Powyższy adres aktualizuje się automatycznie; nadal możesz dodać piętro lub moduł ręcznie.",
     "hiraOfficialLabel": "Urzędnik HIRA",
-    "hiraSpecialists": "{count} specjalistów"
+    "hiraSpecialists": "{count} specjalistów",
+    "hospitalAddress": "Adres szpitala",
+    "copyAddress": "Kopiuj",
+    "addressCopied": "Skopiowano",
+    "taxiAddressTitle": "Jedziesz taksówką?",
+    "taxiAddressTip": "Skopiuj powyższy adres szpitala, otwórz Kakao T lub Uber i wklej go, jeśli miejsce docelowe nie zostanie wypełnione automatycznie.",
+    "mapNavigationApps": "Nawigacja po mapie",
+    "taxiApps": "Aplikacje taksówkowe"
   },
   "uk": {
     "brandSub": "Медичний помічник Agentic AI",
@@ -6222,7 +6320,14 @@
     "serviceTimeEndedDesc": "Виберіть, завершити послугу зараз чи продовжити її на 30 хвилин. Оплата базується на остаточній фактичній тривалості послуги, щонайменше одна година.",
     "mapPickerHelp": "Перетягніть або збільште карту, щоб розмістити центральну шпильку біля входу. Адреса вище оновлюється автоматично; ви все ще можете додати поверх або блок вручну.",
     "hiraOfficialLabel": "Офіційна особа HIRA",
-    "hiraSpecialists": "{count} фахівців"
+    "hiraSpecialists": "{count} фахівців",
+    "hospitalAddress": "Адреса лікарні",
+    "copyAddress": "Копія",
+    "addressCopied": "Скопійовано",
+    "taxiAddressTitle": "їдете на таксі?",
+    "taxiAddressTip": "Скопіюйте адресу лікарні вище, відкрийте Kakao T або Uber і вставте її, якщо пункт призначення не заповнюється автоматично.",
+    "mapNavigationApps": "Навігація по карті",
+    "taxiApps": "Додатки таксі"
   },
   "ms": {
     "brandSub": "Pembantu lawatan perubatan AI ejen",
@@ -6637,7 +6742,14 @@
     "serviceTimeEndedDesc": "Pilih sama ada untuk menamatkan perkhidmatan sekarang atau melanjutkannya selama 30 minit. Pengebilan adalah berdasarkan tempoh perkhidmatan sebenar terakhir, dengan minimum satu jam.",
     "mapPickerHelp": "Seret atau zum peta untuk meletakkan pin tengah pada pintu masuk yang tepat. Alamat di atas dikemas kini secara automatik; anda masih boleh menambah lantai atau unit secara manual.",
     "hiraOfficialLabel": "rasmi HIRA",
-    "hiraSpecialists": "{count} pakar"
+    "hiraSpecialists": "{count} pakar",
+    "hospitalAddress": "Alamat hospital",
+    "copyAddress": "salin",
+    "addressCopied": "disalin",
+    "taxiAddressTitle": "Naik teksi?",
+    "taxiAddressTip": "Salin alamat hospital di atas, buka Kakao T atau Uber, dan tampalkannya jika destinasi tidak diisi secara automatik.",
+    "mapNavigationApps": "Navigasi peta",
+    "taxiApps": "Aplikasi teksi"
   },
   "tl": {
     "brandSub": "Agent AI medical visit assistant",
@@ -7052,7 +7164,14 @@
     "serviceTimeEndedDesc": "Piliin kung tatapusin ang serbisyo ngayon o palawigin ito ng 30 minuto. Ang pagsingil ay batay sa huling aktwal na tagal ng serbisyo, na may pinakamababang isang oras.",
     "mapPickerHelp": "I-drag o i-zoom ang mapa upang ilagay ang center pin sa eksaktong pasukan. Awtomatikong nag-a-update ang address sa itaas; maaari ka pa ring magdagdag ng sahig o unit nang manu-mano.",
     "hiraOfficialLabel": "Opisyal ng HIRA",
-    "hiraSpecialists": "{count} mga espesyalista"
+    "hiraSpecialists": "{count} mga espesyalista",
+    "hospitalAddress": "Address ng ospital",
+    "copyAddress": "Kopyahin",
+    "addressCopied": "Kinopya",
+    "taxiAddressTitle": "Sumakay ng taxi?",
+    "taxiAddressTip": "Kopyahin ang address ng ospital sa itaas, buksan ang Kakao T o Uber, at i-paste ito kung hindi awtomatikong napunan ang destinasyon.",
+    "mapNavigationApps": "Pag-navigate sa mapa",
+    "taxiApps": "Mga app ng taxi"
   },
   "mn": {
     "brandSub": "Agentic AI эмнэлгийн үзлэгийн туслах",
@@ -7467,7 +7586,14 @@
     "serviceTimeEndedDesc": "Үйлчилгээг одоо дуусгах уу эсвэл 30 минутаар сунгах уу гэдгээ сонгоно уу. Тооцоолол нь хамгийн багадаа нэг цагийн үйлчилгээний эцсийн бодит хугацаа дээр суурилдаг.",
     "mapPickerHelp": "Газрын зургийг чирж эсвэл томруулж, голын зүүг яг орох хаалган дээр байрлуулна уу. Дээрх хаяг автоматаар шинэчлэгддэг; Та шал эсвэл нэгжийг гараар нэмж болно.",
     "hiraOfficialLabel": "HIRA албан тушаалтан",
-    "hiraSpecialists": "{count} мэргэжилтэн"
+    "hiraSpecialists": "{count} мэргэжилтэн",
+    "hospitalAddress": "Эмнэлгийн хаяг",
+    "copyAddress": "Хуулах",
+    "addressCopied": "Хуулсан",
+    "taxiAddressTitle": "Такси барих уу?",
+    "taxiAddressTip": "Дээрх эмнэлгийн хаягийг хуулж, Kakao T эсвэл Uber-ийг нээж, очих газар автоматаар бөглөгдөөгүй бол буулгана уу.",
+    "mapNavigationApps": "Газрын зургийн навигаци",
+    "taxiApps": "Таксины програмууд"
   },
   "uz": {
     "brandSub": "Agentlik AI tibbiy tashrif yordamchisi",
@@ -7882,7 +8008,14 @@
     "serviceTimeEndedDesc": "Xizmatni hozir tugatishni yoki uni 30 daqiqaga uzaytirishni tanlang. Hisob-kitob kamida bir soatlik xizmat ko'rsatishning yakuniy muddatiga asoslanadi.",
     "mapPickerHelp": "Markaziy pinni aniq kirish joyiga joylashtirish uchun xaritani torting yoki kattalashtiring. Yuqoridagi manzil avtomatik ravishda yangilanadi; siz hali ham pol yoki birlikni qo'lda qo'shishingiz mumkin.",
     "hiraOfficialLabel": "HIRA rasmiysi",
-    "hiraSpecialists": "{count} mutaxassis"
+    "hiraSpecialists": "{count} mutaxassis",
+    "hospitalAddress": "Kasalxona manzili",
+    "copyAddress": "Nusxalash",
+    "addressCopied": "Ko‘chirildi",
+    "taxiAddressTitle": "Taksi tutyapsizmi?",
+    "taxiAddressTip": "Yuqoridagi shifoxona manzilidan nusxa oling, Kakao T yoki Uberni oching va agar manzil avtomatik ravishda to‘ldirilmasa, uni joylashtiring.",
+    "mapNavigationApps": "Xarita navigatsiyasi",
+    "taxiApps": "Taksi dasturlar"
   },
   "bn": {
     "brandSub": "এজেন্টিক এআই মেডিকেল ভিজিট সহকারী",
@@ -8297,7 +8430,14 @@
     "serviceTimeEndedDesc": "পরিষেবাটি এখনই শেষ করতে হবে নাকি 30 মিনিটের মধ্যে বাড়ানো হবে তা বেছে নিন। বিলিং ন্যূনতম এক ঘন্টা সহ চূড়ান্ত প্রকৃত পরিষেবার সময়কালের উপর ভিত্তি করে।",
     "mapPickerHelp": "সঠিক প্রবেশপথে কেন্দ্র পিন স্থাপন করতে মানচিত্রটি টেনে আনুন বা জুম করুন। উপরের ঠিকানা স্বয়ংক্রিয়ভাবে আপডেট হয়; আপনি এখনও ম্যানুয়ালি একটি মেঝে বা ইউনিট যোগ করতে পারেন।",
     "hiraOfficialLabel": "HIRA কর্মকর্তা",
-    "hiraSpecialists": "{count} বিশেষজ্ঞ"
+    "hiraSpecialists": "{count} বিশেষজ্ঞ",
+    "hospitalAddress": "হাসপাতালের ঠিকানা",
+    "copyAddress": "কপি",
+    "addressCopied": "কপি করা হয়েছে",
+    "taxiAddressTitle": "ট্যাক্সি নিচ্ছেন?",
+    "taxiAddressTip": "উপরের হাসপাতালের ঠিকানাটি অনুলিপি করুন, Kakao T বা Uber খুলুন, এবং যদি গন্তব্য স্বয়ংক্রিয়ভাবে পূরণ না হয় তবে এটি পেস্ট করুন।",
+    "mapNavigationApps": "মানচিত্র নেভিগেশন",
+    "taxiApps": "ট্যাক্সি অ্যাপস"
   },
   "ur": {
     "brandSub": "Agentic AI میڈیکل وزٹ اسسٹنٹ",
@@ -8712,7 +8852,14 @@
     "serviceTimeEndedDesc": "منتخب کریں کہ آیا سروس کو ابھی ختم کرنا ہے یا اسے 30 منٹ تک بڑھانا ہے۔ بلنگ آخری حقیقی سروس کی مدت پر مبنی ہے، کم از کم ایک گھنٹے کے ساتھ۔",
     "mapPickerHelp": "مرکزی پن کو عین داخلی راستے پر رکھنے کے لیے نقشے کو گھسیٹیں یا زوم کریں۔ اوپر والا پتہ خود بخود اپ ڈیٹ ہو جاتا ہے۔ آپ اب بھی دستی طور پر فرش یا یونٹ شامل کر سکتے ہیں۔",
     "hiraOfficialLabel": "HIRA اہلکار",
-    "hiraSpecialists": "{count} ماہرین"
+    "hiraSpecialists": "{count} ماہرین",
+    "hospitalAddress": "ہسپتال کا پتہ",
+    "copyAddress": "کاپی",
+    "addressCopied": "کاپی",
+    "taxiAddressTitle": "ٹیکسی لے رہے ہو؟",
+    "taxiAddressTip": "اوپر ہسپتال کا پتہ کاپی کریں، Kakao T یا Uber کھولیں، اور اگر منزل خود بخود نہیں بھرتی ہے تو اسے چسپاں کریں۔",
+    "mapNavigationApps": "نقشہ نیویگیشن",
+    "taxiApps": "ٹیکسی ایپس"
   },
   "fa": {
     "brandSub": "دستیار ویزیت پزشکی عامل هوش مصنوعی",
@@ -9127,7 +9274,14 @@
     "serviceTimeEndedDesc": "انتخاب کنید که آیا خدمات را اکنون پایان دهید یا آن را 30 دقیقه تمدید کنید. صورت‌حساب بر اساس مدت زمان خدمات واقعی نهایی، با حداقل یک ساعت است.",
     "mapPickerHelp": "نقشه را بکشید یا بزرگنمایی کنید تا پین مرکزی را دقیقاً در ورودی قرار دهید. آدرس بالا به طور خودکار به روز می شود. هنوز هم می توانید یک طبقه یا واحد را به صورت دستی اضافه کنید.",
     "hiraOfficialLabel": "مقام هیرا",
-    "hiraSpecialists": "متخصصان {count}"
+    "hiraSpecialists": "متخصصان {count}",
+    "hospitalAddress": "آدرس بیمارستان",
+    "copyAddress": "کپی کنید",
+    "addressCopied": "کپی شده است",
+    "taxiAddressTitle": "تاکسی گرفتن؟",
+    "taxiAddressTip": "آدرس بیمارستان بالا را کپی کنید، Kakao T یا Uber را باز کنید و اگر مقصد به طور خودکار پر نشد، آن را جایگذاری کنید.",
+    "mapNavigationApps": "ناوبری نقشه",
+    "taxiApps": "اپلیکیشن های تاکسی"
   },
   "ne": {
     "brandSub": "एजेन्टिक एआई मेडिकल भ्रमण सहायक",
@@ -9542,7 +9696,14 @@
     "serviceTimeEndedDesc": "अहिले नै सेवा अन्त्य गर्ने वा ३० मिनेटसम्म विस्तार गर्ने छनौट गर्नुहोस्। बिलिङ अन्तिम वास्तविक सेवा अवधिमा आधारित छ, न्यूनतम एक घण्टाको साथ।",
     "mapPickerHelp": "सही प्रवेशद्वारमा केन्द्र पिन राख्न नक्सा तान्नुहोस् वा जुम गर्नुहोस्। माथिको ठेगाना स्वतः अपडेट हुन्छ; तपाईं अझै पनि म्यानुअल रूपमा भुइँ वा एकाइ थप्न सक्नुहुन्छ।",
     "hiraOfficialLabel": "HIRA अधिकारी",
-    "hiraSpecialists": "{count} विशेषज्ञहरू"
+    "hiraSpecialists": "{count} विशेषज्ञहरू",
+    "hospitalAddress": "अस्पतालको ठेगाना",
+    "copyAddress": "प्रतिलिपि गर्नुहोस्",
+    "addressCopied": "प्रतिलिपि गरियो",
+    "taxiAddressTitle": "ट्याक्सी लिँदै हुनुहुन्छ?",
+    "taxiAddressTip": "माथिको अस्पतालको ठेगाना प्रतिलिपि गर्नुहोस्, Kakao T वा Uber खोल्नुहोस्, र यदि गन्तव्य स्वतः भरिएको छैन भने टाँस्नुहोस्।",
+    "mapNavigationApps": "नक्सा नेभिगेसन",
+    "taxiApps": "ट्याक्सी एपहरू"
   },
   "my": {
     "brandSub": "Agent AI ဆေးဘက်ဆိုင်ရာအလည်အပတ်လက်ထောက်",
@@ -9957,7 +10118,14 @@
     "serviceTimeEndedDesc": "ဝန်ဆောင်မှုကို ယခုအဆုံးသတ်ရန် သို့မဟုတ် ၎င်းကို မိနစ် 30 တွင် သက်တမ်းတိုးရန် ရွေးချယ်ပါ။ အနည်းဆုံး တစ်နာရီ အနည်းဆုံးဖြင့် ငွေတောင်းခံခြင်းမှာ နောက်ဆုံး အမှန်တကယ် ဝန်ဆောင်မှုကြာချိန်အပေါ် အခြေခံပါသည်။",
     "mapPickerHelp": "အတိအကျဝင်ပေါက်တွင် ဗဟိုပင်ကိုထားရန် မြေပုံကို ဆွဲယူ သို့မဟုတ် ချုံ့ချဲ့ပါ။ အထက်ပါလိပ်စာသည် အလိုအလျောက် အပ်ဒိတ်လုပ်သည်; ကြမ်းပြင် သို့မဟုတ် ယူနစ်ကို ကိုယ်တိုင်ထည့်နိုင်သည်။",
     "hiraOfficialLabel": "HIRA အရာရှိ",
-    "hiraSpecialists": "ကျွမ်းကျင်သူ {count} ဦး"
+    "hiraSpecialists": "ကျွမ်းကျင်သူ {count} ဦး",
+    "hospitalAddress": "ဆေးရုံလိပ်စာ",
+    "copyAddress": "ကော်ပီ",
+    "addressCopied": "ကူးယူသည်။",
+    "taxiAddressTitle": "တက္ကစီစီးမလား?",
+    "taxiAddressTip": "အပေါ်က ဆေးရုံလိပ်စာကို မိတ္တူကူးပြီး Kakao T သို့မဟုတ် Uber ကိုဖွင့်ပြီး လိုရာကို အလိုအလျောက် မဖြည့်ပါက ၎င်းကို ကူးထည့်ပါ။",
+    "mapNavigationApps": "မြေပုံညွှန်း",
+    "taxiApps": "တက္ကစီအက်ပ်များ"
   },
   "ko": {
     "brandSub": "Agentic AI 의료방문 도우미",
@@ -10372,7 +10540,14 @@
     "serviceTimeEndedDesc": "서비스를 지금 종료할지, 30분 연장할지 선택하세요. 청구는 최종 실제 서비스 기간을 기준으로 하며 최소 1시간입니다.",
     "mapPickerHelp": "지도를 드래그하거나 확대/축소하여 정확한 입구에 중앙 핀을 배치하세요. 위의 주소는 자동으로 업데이트됩니다. 층이나 유닛을 수동으로 추가할 수도 있습니다.",
     "hiraOfficialLabel": "심사평가원 공식",
-    "hiraSpecialists": "{count} 전문가"
+    "hiraSpecialists": "{count} 전문가",
+    "hospitalAddress": "병원 주소",
+    "copyAddress": "복사",
+    "addressCopied": "복사됨",
+    "taxiAddressTitle": "택시를 타시나요?",
+    "taxiAddressTip": "위 병원 주소를 복사해서 카카오 T나 우버를 열고 목적지가 자동으로 채워지지 않으면 붙여넣으세요.",
+    "mapNavigationApps": "지도 탐색",
+    "taxiApps": "택시 앱"
   },
   "ja": {
     "brandSub": "Agent AI 訪問アシスタント",
@@ -10787,6 +10962,13 @@
     "serviceTimeEndedDesc": "サービスを今すぐ終了するか、30 分延長するかを選択します。料金は、実際の最終サービス時間に基づいて、最低 1 時間から請求されます。",
     "mapPickerHelp": "Drag or zoom the map to place the center pin on the exact entrance.上記のアドレスは自動的に更新されます。フロアまたはユニットを手動で追加することもできます。",
     "hiraOfficialLabel": "ヒラ公式",
-    "hiraSpecialists": "{count} 人のスペシャリスト"
+    "hiraSpecialists": "{count} 人のスペシャリスト",
+    "hospitalAddress": "病院の住所",
+    "copyAddress": "コピー",
+    "addressCopied": "コピーされました",
+    "taxiAddressTitle": "タクシーに乗りますか？",
+    "taxiAddressTip": "上記の病院の住所をコピーし、カカオ T または Uber を開き、目的地が自動的に入力されない場合は貼り付けます。",
+    "mapNavigationApps": "地図ナビゲーション",
+    "taxiApps": "タクシーアプリ"
   }
 }

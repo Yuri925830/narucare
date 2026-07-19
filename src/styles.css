@@ -165,6 +165,12 @@ input:focus, select:focus, textarea:focus { box-shadow: 0 0 0 3px rgba(143, 106,
 .messages { flex: 1 1 auto; min-height: 0; padding: 25px 15px; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; scrollbar-gutter: stable; -webkit-overflow-scrolling: touch; }
 .message { width: fit-content; max-width: 88%; padding: 14px 16px; margin-bottom: 22px; border-radius: 18px; border: 1px solid var(--line); background: rgba(255,255,255,.72); box-shadow: var(--shadow-soft); }
 .message p { margin: 8px 0 0; line-height: 1.65; white-space: pre-wrap; }
+.welcome-message { margin-top: 10px; }
+.welcome-message h2 { margin: 18px 0 8px; font-size: clamp(18px, 1.55vw, 23px); line-height: 1.35; letter-spacing: -.02em; }
+.welcome-message h2:first-child { margin-top: 0; }
+.welcome-message h3 { margin: 18px 0 6px; font-size: clamp(15px, 1.2vw, 18px); line-height: 1.4; color: var(--ink); }
+.welcome-message p { margin: 0 0 10px; line-height: 1.72; }
+.welcome-message hr { height: 1px; margin: 18px 0; border: 0; background: linear-gradient(90deg, transparent, var(--line), transparent); }
 .message-user { margin-left: auto; background: linear-gradient(160deg, #89695c, #65493f); color: white; border-color: white; }
 .message-user p { margin-top: 0; }
 .message-author { display: flex; align-items: center; gap: 9px; }
@@ -238,8 +244,12 @@ input:focus, select:focus, textarea:focus { box-shadow: 0 0 0 3px rgba(143, 106,
 .navigation-layout { display: grid; grid-template-columns: minmax(0,1fr) 330px; gap: 22px; }
 .navigation-layout .interactive-map { min-height: 620px; }
 .route-info { display: flex; flex-direction: column; padding: 24px; border-radius: 22px; border: 1px solid var(--line); background: rgba(255,255,255,.52); }
-.route-info > span, .route-info > strong { color: var(--muted); font-size: 12px; }.route-info h2 { margin: 10px 0; font-size: 20px; }.route-info hr { width: 100%; border: 0; border-top: 1px solid var(--line); margin: 22px 0; }.route-info > p { display: flex; justify-content: space-between; color: var(--muted); font-size: 12px; }.route-info > p b { color: #333; }.route-info .info-banner { margin: 25px 0; }.route-info > .button { width: 100%; margin-top: 10px; }
-.external-map-links { display: grid; gap: 8px; }.external-map-links .button { min-height: 46px; font-size: 12px; }
+.route-info > span, .route-info > strong { color: var(--muted); font-size: 12px; }.route-info h2 { margin: 10px 0; font-size: 20px; }.route-info hr { width: 100%; border: 0; border-top: 1px solid var(--line); margin: 22px 0; }.route-info > p { display: flex; justify-content: space-between; color: var(--muted); font-size: 12px; }.route-info > p b { color: #333; }.route-info .info-banner { margin: 20px 0 14px; }.route-info > .button { width: 100%; margin-top: 10px; }
+.destination-address { display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: 10px; margin: 2px 0 13px; padding: 12px; border: 1px solid rgba(148,119,105,.18); border-radius: 15px; background: linear-gradient(145deg, rgba(255,255,255,.82), rgba(239,226,214,.62)); box-shadow: inset 0 1px 0 white, 0 8px 20px rgba(99,73,61,.07); }
+.destination-address > svg { color: #b8655d; }.destination-address span, .destination-address strong { display: block; }.destination-address span { color: var(--muted); font-size: 10px; }.destination-address strong { margin-top: 3px; color: var(--ink); font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }.destination-address .button { min-height: 38px; padding: 0 11px; border-radius: 12px; font-size: 10px; color: var(--brown); background: rgba(255,255,255,.76); box-shadow: inset 0 0 0 1px white, 0 5px 14px rgba(86,62,52,.08); }.destination-address .button.copied { color: #3f8066; background: #e4f5ec; }
+.taxi-address-tip { display: flex; align-items: flex-start; gap: 11px; margin: 0 0 15px; padding: 12px 13px; border-radius: 15px; color: #6b5045; background: linear-gradient(135deg, #fff4df, #f4e2d5); border: 1px solid rgba(187,139,88,.2); }.taxi-address-tip > svg { flex: 0 0 auto; margin-top: 2px; color: #b47742; }.taxi-address-tip strong, .taxi-address-tip small { display: block; }.taxi-address-tip strong { font-size: 12px; }.taxi-address-tip small { margin-top: 4px; color: #856d61; font-size: 10px; line-height: 1.55; }
+.external-app-group { margin-top: 12px; }.external-app-group > h3 { display: flex; align-items: center; gap: 7px; margin: 0 0 7px; color: #72594e; font-size: 11px; }.external-map-links { display: grid; gap: 8px; }.external-map-links .button { position: relative; justify-content: flex-start; min-height: 48px; padding: 0 16px; overflow: hidden; border: 1px solid rgba(255,255,255,.76); font-size: 12px; font-weight: 750; box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 8px 18px rgba(84,62,53,.1); }.external-map-links .button::after { content: ""; position: absolute; width: 74px; height: 74px; right: -24px; top: -38px; border-radius: 50%; background: rgba(255,255,255,.28); }.external-map-links .button svg { position: relative; z-index: 1; }
+.external-map-links .app-link-naver { color: #236d50; background: linear-gradient(135deg, #e7f6ee, #cce9dc); }.external-map-links .app-link-google { color: #395f87; background: linear-gradient(135deg, #eaf3ff, #d6e6f5); }.external-map-links .app-link-kakao-map { color: #765b25; background: linear-gradient(135deg, #fff6ce, #f3e7ad); }.external-map-links .app-link-kakao-t { color: #574813; background: linear-gradient(135deg, #ffef74, #f4d84c); }.external-map-links .app-link-uber { color: #f9f5f1; background: linear-gradient(135deg, #5e4a42, #2d2522); }
 
 /* Visit flow */
 .prepare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 28px 0 35px; }
@@ -367,6 +377,7 @@ input:focus, select:focus, textarea:focus { box-shadow: 0 0 0 3px rgba(143, 106,
 .agent-naru-card .agent-side-naru { width: 142px; }
 .gate-naru-pose { width: 74px; margin: -10px auto -8px; }
 .banner-character { display: flex; align-items: center; gap: 12px; }
+.banner-character .card-banner-edit { min-height: 38px; padding: 0 14px; white-space: nowrap; }
 .hospital-banner-naru, .flow-banner-naru, .medical-card-naru, .companion-notice-naru { width: 58px; margin-block: -18px; }
 .route-info { position: relative; overflow: hidden; }
 .route-naru-pose { position: absolute; width: 72px; top: 12px; right: 10px; opacity: .92; }

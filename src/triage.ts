@@ -92,6 +92,31 @@ function symptomSummary(current: string, previous: string[]) {
   return [...new Set(candidates)].join("；").slice(0, 1_000);
 }
 
+function stripServiceCommands(value: string) {
+  const servicePatterns = [HOSPITAL_REQUEST, EMERGENCY_REQUEST, CARD_REQUEST, FLOW_REQUEST, TRANSLATION_REQUEST, COMPANION_REQUEST];
+  return servicePatterns
+    .reduce((current, pattern) => current.replace(new RegExp(pattern.source, "giu"), " "), normalize(value))
+    .replace(/^[\s,，;；。.!！?？:：—-]+|[\s,，;；。.!！?？:：—-]+$/gu, "")
+    .trim();
+}
+
+/**
+ * Returns only text that contains an actual symptom or red-flag description.
+ * Navigation/service commands such as “附近医院” and “呼叫 119” deliberately
+ * return an empty string so they can never enter the medical card or broadcast.
+ */
+export function extractReportableSymptoms(value: string) {
+  const verified = symptomSummary(value, []);
+  if (!verified) return "";
+  const symptomsOnly = stripServiceCommands(verified);
+  return symptomSummary(symptomsOnly, []);
+}
+
+export function isHospitalCommandWithoutSymptoms(value: string) {
+  const clean = normalize(value);
+  return Boolean(clean && HOSPITAL_REQUEST.test(clean) && !extractReportableSymptoms(clean));
+}
+
 export function assessMedicalIntent(message: string, previousUserMessages: string[] = [], hasCard = true): MedicalTriageResult {
   const current = normalize(message);
   if (!current) return { intent: "general", symptoms: "", reason: "none" };

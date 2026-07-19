@@ -487,6 +487,8 @@ export function LocationPickerMap({ center, accuracy, disabled = false, onPick, 
   const onPickRef = useRef(onPick);
   const disabledRef = useRef(disabled);
   const programmaticTarget = useRef<[number, number] | null>(null);
+  const gestureVersion = useRef(0);
+  const handledGestureVersion = useRef(0);
   onPickRef.current = onPick;
   disabledRef.current = disabled;
 
@@ -502,8 +504,11 @@ export function LocationPickerMap({ center, accuracy, disabled = false, onPick, 
       mapDataControl: false,
     });
     mapRef.current = map;
-    let acceptingUserMoves = false;
-    const readyTimer = window.setTimeout(() => { acceptingUserMoves = true; }, 180);
+    const mapElement = container.current;
+    const markUserGesture = () => { gestureVersion.current += 1; };
+    mapElement.addEventListener("pointerdown", markUserGesture, true);
+    mapElement.addEventListener("touchstart", markUserGesture, true);
+    mapElement.addEventListener("wheel", markUserGesture, { capture: true, passive: true });
     listenerRef.current = maps.Event.addListener(map, "idle", () => {
       const point = map.getCenter();
       const lat = point.lat();
@@ -514,13 +519,16 @@ export function LocationPickerMap({ center, accuracy, disabled = false, onPick, 
         return;
       }
       programmaticTarget.current = null;
-      if (!acceptingUserMoves || disabledRef.current) return;
+      if (gestureVersion.current === handledGestureVersion.current || disabledRef.current) return;
+      handledGestureVersion.current = gestureVersion.current;
       onPickRef.current(lat, lng);
     });
     const resizeTimer = window.setTimeout(() => maps.Event.trigger(map, "resize"), 80);
     return () => {
-      window.clearTimeout(readyTimer);
       window.clearTimeout(resizeTimer);
+      mapElement.removeEventListener("pointerdown", markUserGesture, true);
+      mapElement.removeEventListener("touchstart", markUserGesture, true);
+      mapElement.removeEventListener("wheel", markUserGesture, true);
       if (listenerRef.current) maps.Event.removeListener(listenerRef.current);
       listenerRef.current = null;
       map.destroy?.();

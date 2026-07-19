@@ -1,13 +1,32 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { AlertTriangle, ArrowRight, CalendarCheck2, CalendarOff, Check, Clock3, Languages, LocateFixed, MapPin, Mic, Navigation, Send, ShieldCheck, Square, Stethoscope, Volume2 } from "lucide-react";
+import { AlertTriangle, ArrowRight, CalendarCheck2, CalendarOff, CarFront, Check, Clock3, Copy, Languages, LocateFixed, Map, MapPin, Mic, Navigation, Send, ShieldCheck, Square, Stethoscope, Volume2 } from "lucide-react";
 import { api } from "../api";
 import { Button, InfoBanner, InteractiveMap, NaverNavigationMap, NaruPose, Panel, StatusPill } from "../components";
 import { evaluateOpeningHours, formatOpeningSchedule, formatRestDays } from "../hospitalHours";
 import { localeOptions, useI18n } from "../i18n";
-import { assessMedicalIntent, isAffirmativeResponse, isNaruCapabilityQuestion, isNaruIdentityQuestion, isNegativeResponse } from "../triage";
+import { assessMedicalIntent, extractReportableSymptoms, isAffirmativeResponse, isNaruCapabilityQuestion, isNaruIdentityQuestion, isNegativeResponse } from "../triage";
 import type { ChatHistoryEntry, Hospital, LocationState, MedicalCard, TranslationRecordEntry } from "../types";
 
 interface Message { id: string; role: "naru" | "user" | "status"; text: string; detail?: string }
+
+function InlineMessageText({ text }: { text: string }) {
+  return <>{text.split(/(\*\*[^*]+\*\*)/g).map((part, index) => part.startsWith("**") && part.endsWith("**")
+    ? <strong key={`${index}-${part}`}>{part.slice(2, -2)}</strong>
+    : part)}</>;
+}
+
+function WelcomeMessage({ text }: { text: string }) {
+  const blocks = text.trim().split(/\n\s*\n/);
+  return <div className="welcome-message" dir="auto">
+    {blocks.map((block, index) => {
+      const key = `${index}-${block.slice(0, 18)}`;
+      if (block === "---") return <hr key={key} />;
+      if (block.startsWith("### ")) return <h3 key={key}><InlineMessageText text={block.slice(4)} /></h3>;
+      if (block.startsWith("## ")) return <h2 key={key}><InlineMessageText text={block.slice(3)} /></h2>;
+      return <p key={key}><InlineMessageText text={block} /></p>;
+    })}
+  </div>;
+}
 
 export function AgentPage({ card, onCard, onEmergency, onHospitals, onSymptoms, onCompanion, onFlow, onTranslation, gateSignal }: {
   card: MedicalCard | null;
@@ -21,7 +40,7 @@ export function AgentPage({ card, onCard, onEmergency, onHospitals, onSymptoms, 
   gateSignal?: number;
 }) {
   const { locale, t } = useI18n();
-  const [messages, setMessages] = useState<Message[]>([{ id: "welcome", role: "naru", text: card ? t("naruReady", { name: card.name }) : t("naruGreeting") }]);
+  const [messages, setMessages] = useState<Message[]>([{ id: "welcome", role: "naru", text: t("naruGreeting") }]);
   const [input, setInput] = useState("");
   const [gate, setGate] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -29,14 +48,19 @@ export function AgentPage({ card, onCard, onEmergency, onHospitals, onSymptoms, 
   const messagesRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setMessages((current) => current.length === 1 ? [{ id: "welcome", role: "naru", text: card ? t("naruReady", { name: card.name }) : t("naruGreeting") }] : current);
-  }, [card?.name, locale]);
+    setMessages((current) => current.length === 1 ? [{ id: "welcome", role: "naru", text: t("naruGreeting") }] : current);
+  }, [locale, t]);
 
   useEffect(() => { if (!card && gateSignal) setGate(true); }, [card, gateSignal]);
   useEffect(() => { if (card) setGate(false); }, [card]);
   useEffect(() => {
     const container = messagesRef.current;
-    if (container) container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
+    if (!container) return;
+    if (messages.length === 1 && messages[0]?.id === "welcome") {
+      container.scrollTo({ top: 0, behavior: "instant" });
+      return;
+    }
+    container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
   }, [messages, busy]);
 
   const send = async (text = input) => {
@@ -78,8 +102,8 @@ export function AgentPage({ card, onCard, onEmergency, onHospitals, onSymptoms, 
       .map((message) => ({ role: message.role === "user" ? "user" : "assistant", content: message.text }));
     const previousUserMessages = history.filter((message) => message.role === "user").map((message) => message.content);
     const localTriage = assessMedicalIntent(clean, previousUserMessages, true);
-    const reportedSymptoms = localTriage.symptoms?.trim() || "";
-    const effectiveEmergencySymptoms = reportedSymptoms || card.symptoms?.trim() || clean;
+    const reportedSymptoms = extractReportableSymptoms(localTriage.symptoms || "");
+    const effectiveEmergencySymptoms = reportedSymptoms || extractReportableSymptoms(card.symptoms || "") || extractReportableSymptoms(clean);
     if (localTriage.intent === "emergency") {
       if (localTriage.symptoms) await onSymptoms?.(localTriage.symptoms);
       setPendingHospitalSymptoms(null);
@@ -107,11 +131,11 @@ export function AgentPage({ card, onCard, onEmergency, onHospitals, onSymptoms, 
     setBusy(true);
     try {
       const response = await api.chat(clean, locale, true, history);
-      const responseSymptoms = response.symptoms?.trim() || reportedSymptoms;
+      const responseSymptoms = extractReportableSymptoms(response.symptoms || reportedSymptoms);
       if (response.symptoms) await onSymptoms?.(response.symptoms);
       if (response.intent === "emergency") {
         setPendingHospitalSymptoms(null);
-        return onEmergency(responseSymptoms || card.symptoms?.trim() || clean);
+        return onEmergency(responseSymptoms || extractReportableSymptoms(card.symptoms || "") || extractReportableSymptoms(clean));
       }
       if (response.intent === "hospital") {
         setPendingHospitalSymptoms(responseSymptoms);
@@ -137,7 +161,7 @@ export function AgentPage({ card, onCard, onEmergency, onHospitals, onSymptoms, 
       <div className="messages" ref={messagesRef}>
         {messages.map((message) => message.role === "status" ? <InfoBanner key={message.id} tone="mint" title={message.text}>{message.detail || t("nearbyAccepting")}</InfoBanner> : <div key={message.id} className={`message message-${message.role}`}>
           {message.role === "naru" && <div className="message-author"><NaruPose pose={2} className="chat-naru-pose" /><strong>Naru<small>{t("brandSub")}</small></strong></div>}
-          <p dir="auto">{message.text}</p>
+          {message.id === "welcome" ? <WelcomeMessage text={message.text} /> : <p dir="auto">{message.text}</p>}
         </div>)}
         {busy && <div className="typing"><i /><i /><i /></div>}
       </div>
@@ -222,8 +246,16 @@ export function NavigationPage({ location, hospital, onArrived, onTranslation }:
   const [routeAvailable, setRouteAvailable] = useState(false);
   const [distance, setDistance] = useState(hospital.distance);
   const [duration, setDuration] = useState(Math.max(4, Math.round(hospital.distance / 75)));
+  const [addressCopied, setAddressCopied] = useState(false);
   const origin = useMemo<[number, number]>(() => [location.lat, location.lng], [location.lat, location.lng]);
   const destination = useMemo<[number, number]>(() => [hospital.lat, hospital.lng], [hospital.lat, hospital.lng]);
+  const destinationAddress = hospital.address?.trim() || `${hospital.lat.toFixed(6)}, ${hospital.lng.toFixed(6)}`;
+
+  useEffect(() => {
+    if (!addressCopied) return;
+    const timer = window.setTimeout(() => setAddressCopied(false), 2_400);
+    return () => window.clearTimeout(timer);
+  }, [addressCopied]);
 
   useEffect(() => {
     if (mode === "transit") { setRoute([]); setRouteAvailable(false); return; }
@@ -303,6 +335,21 @@ export function NavigationPage({ location, hospital, onArrived, onTranslation }:
     }
     window.open(`https://map.naver.com/p/search/${encodeURIComponent(hospital.name)}`, "_blank", "noopener,noreferrer");
   };
+  const copyDestinationAddress = async () => {
+    try {
+      await navigator.clipboard.writeText(destinationAddress);
+    } catch {
+      const field = document.createElement("textarea");
+      field.value = destinationAddress;
+      field.style.position = "fixed";
+      field.style.opacity = "0";
+      document.body.appendChild(field);
+      field.select();
+      document.execCommand("copy");
+      field.remove();
+    }
+    setAddressCopied(true);
+  };
   const modeLabels: Record<TravelMode, string> = { walking: t("walkingMode"), transit: t("transitMode"), driving: t("drivingMode") };
   const canPreview = mode !== "transit" && routeAvailable;
 
@@ -310,9 +357,11 @@ export function NavigationPage({ location, hospital, onArrived, onTranslation }:
     <div className="travel-tabs">{(["walking", "transit", "driving"] as const).map((item) => <button className={mode === item ? "active" : ""} key={item} onClick={() => setMode(item)}>{item === "walking" ? "🚶" : item === "transit" ? "🚇" : "🚗"}<span>{modeLabels[item]}</span></button>)}</div>
     <div className="navigation-layout">
       <div className="map-card"><div className="map-location"><MapPin size={17} />{t("currentLocation")} · {location.address}</div><NaverNavigationMap center={origin} hospital={hospital} route={route} /></div>
-      <div className="route-info"><NaruPose pose={14} className="route-naru-pose" /><span>{t("destination")}</span><h2>{hospital.name}</h2><strong>{canPreview ? t("routeSummary", { mode: modeLabels[mode], minutes: duration, distance: distance < 1000 ? `${Math.round(distance)}m` : `${(distance / 1000).toFixed(1)}km` }) : t("routePreviewUnavailable")}</strong><hr /><p>{t("estimatedArrival")}<b>{canPreview ? new Date(Date.now() + duration * 60000).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" }) : "—"}</b></p><p>{t("routeStatus")}<b>{canPreview ? t("inProgress") : t("externalNavigation")}</b></p>
+      <div className="route-info"><NaruPose pose={14} className="route-naru-pose" /><span>{t("destination")}</span><h2>{hospital.name}</h2><div className="destination-address"><MapPin size={18} /><div><span>{t("hospitalAddress")}</span><strong dir="auto">{destinationAddress}</strong></div><Button type="button" variant="ghost" className={addressCopied ? "copied" : ""} onClick={() => void copyDestinationAddress()} aria-live="polite">{addressCopied ? <Check size={16} /> : <Copy size={16} />}{addressCopied ? t("addressCopied") : t("copyAddress")}</Button></div><strong>{canPreview ? t("routeSummary", { mode: modeLabels[mode], minutes: duration, distance: distance < 1000 ? `${Math.round(distance)}m` : `${(distance / 1000).toFixed(1)}km` }) : t("routePreviewUnavailable")}</strong><hr /><p>{t("estimatedArrival")}<b>{canPreview ? new Date(Date.now() + duration * 60000).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" }) : "—"}</b></p><p>{t("routeStatus")}<b>{canPreview ? t("inProgress") : t("externalNavigation")}</b></p>
         <InfoBanner tone="mint" title={t("autoTranslation")}>{t("arrivalTip")}</InfoBanner>
-        <div className="external-map-links"><Button onClick={openNaverMaps}><Navigation size={17} />Naver Maps</Button><a className="button button-secondary" href={googleUrl(mode)} target="_blank" rel="noreferrer"><Navigation size={17} />Google Maps</a><a className="button button-secondary" href={kakaoUrl} target="_blank" rel="noreferrer"><MapPin size={17} />Kakao Maps</a><a className="button button-secondary" href={kakaoTaxiUrl} target="_blank" rel="noreferrer" title="Open Kakao T and confirm the hospital destination"><Navigation size={17} />Kakao T</a><Button variant="secondary" type="button" onClick={openUber} title="Open Uber with pickup and hospital destination"><Navigation size={17} />Uber</Button></div>
+        <div className="taxi-address-tip"><CarFront size={20} /><span><strong>{t("taxiAddressTitle")}</strong><small>{t("taxiAddressTip")}</small></span></div>
+        <div className="external-app-group"><h3><Map size={17} />{t("mapNavigationApps")}</h3><div className="external-map-links map-app-links"><Button className="app-link app-link-naver" onClick={openNaverMaps}><Map size={18} />Naver Maps</Button><a className="button app-link app-link-google" href={googleUrl(mode)} target="_blank" rel="noreferrer"><Map size={18} />Google Maps</a><a className="button app-link app-link-kakao-map" href={kakaoUrl} target="_blank" rel="noreferrer"><Map size={18} />Kakao Maps</a></div></div>
+        <div className="external-app-group"><h3><CarFront size={17} />{t("taxiApps")}</h3><div className="external-map-links taxi-app-links"><a className="button app-link app-link-kakao-t" href={kakaoTaxiUrl} target="_blank" rel="noreferrer" title={t("taxiAddressTip")}><CarFront size={18} />Kakao T</a><Button className="app-link app-link-uber" type="button" onClick={openUber} title={t("taxiAddressTip")}><CarFront size={18} />Uber</Button></div></div>
         <Button onClick={onArrived}><MapPin size={18} />{t("arrived")}</Button><Button variant="secondary" onClick={onTranslation}>{t("openTranslation")}</Button>
       </div>
     </div>

@@ -85,6 +85,26 @@ async function assertChatDocked(label) {
     if (!nav || composer.y + composer.height > nav.y - 4) throw new Error(`${label}: composer overlaps the mobile bottom navigation`);
   }
 }
+async function assertUniversalWelcome(label) {
+  const welcome = page.locator(".message-naru").first();
+  const text = await welcome.innerText();
+  for (const expected of [
+    "Hi，我是 Naru，您的 AI 医疗就诊助手！",
+    "就诊信息管理",
+    "身体状况初步判断",
+    "紧急情况处理",
+    "韩国医院就诊指南",
+    "附近医院推荐",
+    "中韩医疗沟通翻译",
+    "真人陪诊服务",
+    "您现在感觉哪里不舒服？",
+  ]) if (!text.includes(expected)) throw new Error(`${label}: universal welcome is missing ${expected}`);
+  if (text.includes("##") || text.includes("**")) throw new Error(`${label}: welcome markdown was rendered as literal text`);
+  if (await welcome.locator(".welcome-message h2").count() !== 2 || await welcome.locator(".welcome-message h3").count() !== 7) {
+    throw new Error(`${label}: welcome hierarchy was not rendered as structured rich text`);
+  }
+  if (await page.locator(".messages").evaluate((element) => element.scrollTop) > 2) throw new Error(`${label}: the long welcome opened at the bottom instead of its first line`);
+}
 page.on("pageerror", (error) => errors.push(error.stack || error.message));
 page.on("console", (message) => { if (message.type() === "error" && !message.text().includes("ERR_FAILED")) errors.push(message.text()); });
 page.on("request", (request) => { if (request.url().includes("/api/hospitals?")) hospitalRequestUrls.push(request.url()); });
@@ -108,6 +128,7 @@ await page.locator('input[autocomplete="new-password"]').nth(1).fill("12345678")
 await page.locator('button[type="submit"]').click();
 await page.locator(".agent-grid").waitFor();
 await page.screenshot({ path: shot("03-agent-desktop.png") });
+await assertUniversalWelcome("new desktop account");
 await assertChatDocked("desktop");
 
 // In-app mobile language switching: the action must be visible immediately,
@@ -171,6 +192,7 @@ await page.locator(".agent-grid").waitFor();
 // Reload here to start an independent visit scenario for the hospital path.
 await page.reload({ waitUntil: "networkidle" });
 await page.locator(".agent-grid").waitFor();
+await assertUniversalWelcome("saved-card account after reload");
 const hospitalRequestCount = hospitalRequestUrls.length;
 await page.locator(".chat-composer input").fill("附近医院");
 await page.locator(".chat-composer").evaluate((form) => form.requestSubmit());
@@ -178,6 +200,14 @@ await page.locator(".hospital-panel").waitFor({ timeout: 5_000 });
 const genericHospitalRequest = hospitalRequestUrls.slice(hospitalRequestCount).at(-1);
 if (!genericHospitalRequest || new URL(genericHospitalRequest).searchParams.get("symptom") !== "") throw new Error("A context-free nearby-hospital request reused or invented symptoms");
 await page.locator(".page-back").click();
+await page.locator(".agent-grid").waitFor();
+await page.locator(".side-nav button").first().click();
+await page.locator(".medical-card-form").waitFor();
+const symptomsAfterGenericHospitalRequest = await page.locator('[data-field="symptoms"] textarea').inputValue();
+if (/附近医院/.test(symptomsAfterGenericHospitalRequest)) throw new Error("The nearby-hospital command was written into the medical-card symptom field");
+if (!/高烧.*看不见/.test(symptomsAfterGenericHospitalRequest)) throw new Error("A generic hospital command erased the last genuinely reported symptoms");
+if (!await page.locator('[data-field="symptoms"] textarea').isDisabled()) throw new Error("Opening a saved card triggered edit mode without an explicit user action");
+await page.locator(".side-nav button").nth(1).click();
 await page.locator(".agent-grid").waitFor();
 await page.locator(".chat-composer input").fill("我刚刚吃了个蛋糕，肚子有点疼");
 await page.locator(".chat-composer").evaluate((form) => form.requestSubmit());
@@ -261,6 +291,12 @@ await page.locator(".hospital-actions .button-primary").click();
 await page.locator(".flow-choice-actions .button-primary").click();
 await page.locator(".navigation-panel").waitFor();
 await page.waitForTimeout(800);
+const destinationAddress = page.locator(".destination-address strong");
+if (!(await destinationAddress.innerText()).trim()) throw new Error("Navigation destination does not show the hospital's concrete address");
+if (await page.locator(".map-app-links .lucide-map").count() !== 3) throw new Error("The three map apps do not use one consistent map icon");
+if (await page.locator(".taxi-app-links .lucide-car-front").count() !== 2) throw new Error("The two taxi apps do not use one consistent car icon");
+await page.locator(".destination-address .button").click();
+if (!/已复制/.test(await page.locator(".destination-address .button").innerText())) throw new Error("One-click hospital address copy did not provide confirmation");
 await page.screenshot({ path: shot("09-navigation-desktop.png") });
 
 await page.locator(".route-info > button.button-secondary").click();
