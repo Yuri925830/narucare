@@ -4,7 +4,7 @@ import { api } from "../api";
 import { Button, InfoBanner, InteractiveMap, NaverNavigationMap, NaruPose, Panel, StatusPill } from "../components";
 import { evaluateOpeningHours, formatOpeningSchedule, formatRestDays } from "../hospitalHours";
 import { localeOptions, useI18n } from "../i18n";
-import { assessMedicalIntent, extractReportableSymptoms, isAffirmativeResponse, isNaruCapabilityQuestion, isNaruIdentityQuestion, isNegativeResponse } from "../triage";
+import { assessMedicalIntent, extractReportableSymptoms, isAffirmativeResponse, isNaruCapabilityQuestion, isNaruIdentityQuestion, isNegativeResponse, isSymptomsResolvedStatement } from "../triage";
 import type { ChatHistoryEntry, Hospital, LocationState, MedicalCard, TranslationRecordEntry } from "../types";
 
 interface Message { id: string; role: "naru" | "user" | "status"; text: string; detail?: string }
@@ -28,12 +28,13 @@ function WelcomeMessage({ text }: { text: string }) {
   </div>;
 }
 
-export function AgentPage({ card, onCard, onEmergency, onHospitals, onSymptoms, onCompanion, onFlow, onTranslation, gateSignal }: {
+export function AgentPage({ card, onCard, onEmergency, onHospitals, onSymptoms, onSymptomsResolved, onCompanion, onFlow, onTranslation, gateSignal }: {
   card: MedicalCard | null;
   onCard: () => void;
   onEmergency: (symptoms: string) => void;
   onHospitals: (symptoms: string) => void | Promise<void>;
   onSymptoms?: (symptoms: string) => void | Promise<void>;
+  onSymptomsResolved?: () => void | Promise<void>;
   onCompanion: () => void;
   onFlow?: () => void;
   onTranslation?: () => void;
@@ -76,11 +77,17 @@ export function AgentPage({ card, onCard, onEmergency, onHospitals, onSymptoms, 
       return;
     }
     if (isNaruIdentityQuestion(clean)) {
-      setMessages((current) => [...current, { id: crypto.randomUUID(), role: "naru", text: t("naruIdentityAnswer") }]);
+      setMessages((current) => [...current, { id: crypto.randomUUID(), role: "naru", text: `💙 ${t("naruIdentityAnswer")} 😊` }]);
       return;
     }
     if (isNaruCapabilityQuestion(clean)) {
-      setMessages((current) => [...current, { id: crypto.randomUUID(), role: "naru", text: t("naruCapabilitiesAnswer") }]);
+      setMessages((current) => [...current, { id: crypto.randomUUID(), role: "naru", text: `😊 ${t("naruCapabilitiesAnswer")} 💙` }]);
+      return;
+    }
+    if (isSymptomsResolvedStatement(clean)) {
+      setPendingHospitalSymptoms(null);
+      await onSymptomsResolved?.();
+      setMessages((current) => [...current, { id: crypto.randomUUID(), role: "naru", text: `🌿 ${t("symptomsResolvedReply")} 💙` }]);
       return;
     }
     if (pendingHospitalSymptoms !== null && isAffirmativeResponse(clean)) {
@@ -94,7 +101,7 @@ export function AgentPage({ card, onCard, onEmergency, onHospitals, onSymptoms, 
     }
     if (pendingHospitalSymptoms !== null && isNegativeResponse(clean)) {
       setPendingHospitalSymptoms(null);
-      setMessages((current) => [...current, { id: crypto.randomUUID(), role: "naru", text: t("hospitalOfferDeclined") }]);
+      setMessages((current) => [...current, { id: crypto.randomUUID(), role: "naru", text: `🌿 ${t("hospitalOfferDeclined")}` }]);
       return;
     }
     const history: ChatHistoryEntry[] = messages
@@ -125,7 +132,7 @@ export function AgentPage({ card, onCard, onEmergency, onHospitals, onSymptoms, 
         return;
       }
       setPendingHospitalSymptoms(reportedSymptoms);
-      setMessages((current) => [...current, { id: crypto.randomUUID(), role: "naru", text: t("hospitalConsentPrompt") }]);
+      setMessages((current) => [...current, { id: crypto.randomUUID(), role: "naru", text: `🩺 ${t("hospitalConsentPrompt")} 🏥` }]);
       return;
     }
     setBusy(true);
@@ -139,14 +146,14 @@ export function AgentPage({ card, onCard, onEmergency, onHospitals, onSymptoms, 
       }
       if (response.intent === "hospital") {
         setPendingHospitalSymptoms(responseSymptoms);
-        setMessages((current) => [...current, { id: crypto.randomUUID(), role: "naru", text: t("hospitalConsentPrompt") }]);
+        setMessages((current) => [...current, { id: crypto.randomUUID(), role: "naru", text: `🩺 ${t("hospitalConsentPrompt")} 🏥` }]);
         return;
       }
       if (response.intent === "card") return onCard();
       if (response.intent === "flow") return onFlow?.();
       if (response.intent === "translation") return onTranslation?.();
       if (response.intent === "companion") return onCompanion();
-      const fallback = response.intent === "education" || localTriage.intent === "education" ? t("medicalEducationFallback") : t("naruConversationFallback");
+      const fallback = response.intent === "education" || localTriage.intent === "education" ? `🩺 ${t("medicalEducationFallback")} 🌿` : `💙 ${t("naruConversationFallback")} 😊`;
       const reply = response.reply || fallback;
       const safeReply = response.intent === "education" && response.reply ? `${reply}\n\n${t("medicalEducationBoundary")}` : reply;
       setMessages((current) => [...current, { id: crypto.randomUUID(), role: "naru", text: safeReply }]);

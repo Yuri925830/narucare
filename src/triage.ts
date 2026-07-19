@@ -31,6 +31,12 @@ const CAPABILITY_QUESTION = /^(?:(?:嗨|你好|请问)[，,\s]*)?(?:(?:你|naru)
 const AFFIRMATIVE_RESPONSE = /^(?:(?:好|好的|好啊|可以|可以的|行|行啊|没问题|当然|同意|要|需要|麻烦你|拜托了|帮我找|请帮我找)(?:吧|啊|呀|的)?|(?:yes|yeah|yep|yup|ok|okay|sure|please|go\s+ahead|do\s+it|sounds\s+good)|(?:네|예|응|좋아요|그래요|알겠습니다|찾아\s*주세요|부탁해요)|(?:はい|ええ|いいです|お願いします|探してください)|(?:sí|si|claro|vale|de\s+acuerdo|por\s+favor)|(?:oui|d['’]?accord|bien\s+sûr|s['’]?il\s+vous\s+plaît)|(?:ja|okay|klar|bitte)|(?:sim|claro|está\s+bem|por\s+favor)|(?:да|хорошо|конечно|пожалуйста)|(?:نعم|حسنًا|موافق|من\s+فضلك)|(?:ya|iya|baik|boleh|tolong)|(?:vâng|được|đồng\s+ý|làm\s+ơn))[.!。！,，\s]*$/iu;
 const NEGATIVE_RESPONSE = /^(?:(?:不|不用|不用了|不需要|暂时不用|先不用|不想去|算了|不了|谢谢不用)(?:了|吧|啊)?|(?:no|nope|not\s+now|no\s+thanks?|don['’]?t|do\s+not)|(?:아니요|아니|괜찮아요|지금은\s*아니요)|(?:いいえ|今はいいです|大丈夫です)|(?:no|ahora\s+no|no\s+gracias)|(?:non|pas\s+maintenant|non\s+merci)|(?:nein|jetzt\s+nicht|nein\s+danke)|(?:não|agora\s+não|não\s+obrigado)|(?:нет|не\s+сейчас|нет\s+спасибо)|(?:لا|ليس\s+الآن|لا\s+شكرًا)|(?:tidak|belum|tidak\s+perlu)|(?:không|chưa|không\s+cần))[.!。！,，\s]*$/iu;
 
+// Recovery is a medical-state update, not ordinary small talk. Keep the
+// positive patterns narrow and reject explicit unresolved wording first so
+// phrases such as “还没好” can never erase an active symptom by accident.
+const UNRESOLVED_SYMPTOMS = /(?:还没(?:好|恢复|退烧)|(?:没有|没)(?:好转|恢复|消失)|症状.{0,5}(?:还在|没消失|没有消失)|还是.{0,6}(?:不舒服|难受|疼|痛|吐|呕吐|拉肚子|腹泻|发烧)|并没有.{0,5}(?:好|恢复)|\b(?:not\s+(?:better|fine|okay|recovered)|haven['’]?t\s+recovered|symptoms?\s+(?:are\s+)?not\s+gone|still\s+(?:sick|unwell|hurts?|in\s+pain))\b|아직.{0,8}(?:안\s*나았|아프|증상)|좋아지지\s*않|여전히.{0,6}아프|まだ.{0,8}(?:治っていない|痛い|症状)|良くなっていない)/iu;
+const RESOLVED_SYMPTOMS = /(?:^(?:(?:我|我又|我现在|我已经|现在我|已经|现在)?(?:完全)?(?:没事|好了|好起来了|恢复了|恢复正常了)(?:了|啦)?|(?:我|我现在|我已经|现在我|已经|现在)?(?:不疼|不痛|不吐|不呕吐|不拉肚子|不腹泻|不发烧|不难受)(?:了|啦)?|(?:症状|不舒服).{0,5}(?:消失了|没有了|没了|好了)|退烧了)[。.!！\s]*$|\b(?:i(?:['’]?m|\s+am)\s+(?:fine|okay|better)\s+now|i(?:['’]?ve|\s+have)\s+(?:fully\s+)?recovered|my\s+symptoms?\s+(?:are\s+)?gone|it\s+doesn['’]?t\s+hurt\s+anymore|i\s+no\s+longer\s+feel\s+sick)\b|^(?:이제\s*)?(?:괜찮아졌어요?|다\s*나았어요?|회복했어요?|증상이?\s*없어졌어요?|더\s*이상\s*아프지\s*않아요)[.!！。\s]*$|^(?:もう)?(?:大丈夫です?|治りました|回復しました|症状がなくなりました|痛くなくなりました)[.!！。\s]*$)/iu;
+
 const EMERGENCY_REQUEST = /(?:呼叫|拨打|打)(?:救护车|119)|(?:需要|叫).*救护车|call\s+(?:an\s+)?ambulance|call\s*119|구급차|119.{0,5}(?:전화|불러)|救急車|119番|ambulancia|ambulance|krankenwagen|скорая|سيارة إسعاف/iu;
 const RED_FLAG = /(无法呼吸|不能呼吸|喘不上气|呼吸(?:非常|极其|严重)?困难|窒息|胸(?:口)?(?:剧烈|严重)?疼?痛|心口(?:剧烈|严重)?疼?痛|昏迷|失去意识|叫不醒|大出血|血止不住|抽搐|癫痫发作|口唇发紫|嘴唇发紫|喉咙(?:肿|堵)|严重过敏|过敏性休克|突然失明|突然看不见|看不见东西|一侧(?:身体)?无力|半边身子无力|口角歪|说话不清|割腕|自杀|想死|不想活|伤害自己|服毒|药物过量|中毒|can't\s*breathe|cannot\s*breathe|difficulty\s*breathing|shortness\s*of\s*breath|choking|severe\s*chest\s*pain|unconscious|unresponsive|severe\s*bleeding|bleeding\s*won't\s*stop|seizure|blue\s*lips|anaphylaxis|throat\s*(?:is\s*)?closing|sudden\s*(?:vision\s*loss|blindness)|can't\s*see|cannot\s*see|one-sided\s*weakness|slurred\s*speech|suicid|kill\s*myself|overdose|poison|숨을?\s*(?:못|쉴\s*수\s*없)|호흡\s*곤란|심한\s*가슴\s*통증|의식\s*(?:없|잃)|깨지\s*않|대량\s*출혈|경련|입술이?\s*파래|아나필락시스|갑자기\s*안\s*보|한쪽\s*마비|자살|죽고\s*싶|과다\s*복용|息ができない|呼吸困難|激しい胸痛|意識がない|大量出血|けいれん|突然見えない|自殺|死にたい|no\s+puedo\s+respirar|dificultad\s+para\s+respirar|dolor\s+fuerte\s+en\s+el\s+pecho|inconsciente|sangrado\s+intenso|je\s+ne\s+peux\s+pas\s+respirer|difficulté\s+à\s+respirer|douleur\s+thoracique\s+intense|bewusstlos|starke\s+brustschmerzen|не\s+могу\s+дышать|сильная\s+боль\s+в\s+груди|لا\s*أستطيع\s*التنفس|ألم\s*شديد\s*في\s*الصدر)/iu;
 
@@ -85,6 +91,12 @@ export function isNegativeResponse(value: string) {
   return NEGATIVE_RESPONSE.test(normalize(value));
 }
 
+export function isSymptomsResolvedStatement(value: string) {
+  const clean = normalize(value);
+  if (!clean || /[?？]/u.test(clean) || UNRESOLVED_SYMPTOMS.test(clean)) return false;
+  return RESOLVED_SYMPTOMS.test(clean);
+}
+
 function symptomSummary(current: string, previous: string[]) {
   const candidates = [...previous.slice(-6), current]
     .map(normalize)
@@ -106,6 +118,7 @@ function stripServiceCommands(value: string) {
  * return an empty string so they can never enter the medical card or broadcast.
  */
 export function extractReportableSymptoms(value: string) {
+  if (isSymptomsResolvedStatement(value)) return "";
   const verified = symptomSummary(value, []);
   if (!verified) return "";
   const symptomsOnly = stripServiceCommands(verified);
@@ -120,6 +133,7 @@ export function isHospitalCommandWithoutSymptoms(value: string) {
 export function assessMedicalIntent(message: string, previousUserMessages: string[] = [], hasCard = true): MedicalTriageResult {
   const current = normalize(message);
   if (!current) return { intent: "general", symptoms: "", reason: "none" };
+  if (isSymptomsResolvedStatement(current)) return { intent: "general", symptoms: "", reason: "none" };
   if (CARD_REQUEST.test(current)) return { intent: "card", symptoms: "", reason: "card_request" };
 
   const asksForKnowledge = isMedicalKnowledgeQuestion(current);

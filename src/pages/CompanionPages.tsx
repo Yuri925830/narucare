@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { BadgeCheck, Check, Clock3, MessageCircleMore, Mic, Phone, ShieldCheck, Star, UserRound, WalletCards } from "lucide-react";
 import { api } from "../api";
-import { actualBillableMinutes, companionServiceTotal } from "../companionBilling";
+import { actualBillableMinutes, companionServiceTotal, extendCompanionDuration, MAX_COMPANION_SERVICE_MINUTES, normalizeCompanionDuration } from "../companionBilling";
 import { Button, formatWon, InfoBanner, NaruPose, NaruStandard, Panel, StatusPill } from "../components";
 import { localeOptions, useI18n } from "../i18n";
 import type { Companion, CompanionFilters, CompanionOrder } from "../types";
@@ -147,8 +147,10 @@ function formatDuration(totalSeconds: number) {
 
 export function CompanionServicePage({ order, stream, onExtend, onEnd }: { order: CompanionOrder; stream: MediaStream | null; onExtend: () => void; onEnd: (actualDurationMinutes: number) => void }) {
   const { t } = useI18n();
-  const initialElapsed = Math.min(order.durationMinutes * 60, order.serviceStartedAt ? Math.max(0, Math.floor((Date.now() - new Date(order.serviceStartedAt).getTime()) / 1000)) : 0);
-  const [remaining, setRemaining] = useState(Math.max(0, order.durationMinutes * 60 - initialElapsed));
+  const initialScheduledMinutes = normalizeCompanionDuration(order.durationMinutes);
+  const initialElapsed = Math.min(initialScheduledMinutes * 60, order.serviceStartedAt ? Math.max(0, Math.floor((Date.now() - new Date(order.serviceStartedAt).getTime()) / 1000)) : 0);
+  const [scheduledMinutes, setScheduledMinutes] = useState(initialScheduledMinutes);
+  const [remaining, setRemaining] = useState(Math.max(0, initialScheduledMinutes * 60 - initialElapsed));
   const [elapsed, setElapsed] = useState(initialElapsed);
   const [recording, setRecording] = useState(false);
   const recorderRef = useRef<MediaRecorder | null>(null);
@@ -183,9 +185,16 @@ export function CompanionServicePage({ order, stream, onExtend, onEnd }: { order
       catch { /* The in-page assertive alert remains available on restricted browsers. */ }
     }
   }, [remaining, t]);
-  function extend() { setRemaining((value) => value + 1800); onExtend(); }
+  const canExtend = scheduledMinutes < MAX_COMPANION_SERVICE_MINUTES;
+  function extend() {
+    if (!canExtend) return;
+    const nextDuration = extendCompanionDuration(scheduledMinutes);
+    setScheduledMinutes(nextDuration);
+    setRemaining((value) => value + (nextDuration - scheduledMinutes) * 60);
+    onExtend();
+  }
   function end() { if (recorderRef.current?.state === "recording") recorderRef.current.stop(); setRecording(false); onEnd(actualBillableMinutes(elapsed)); }
-  return <Panel className="service-panel"><div className="service-person"><NaruPose pose={19} className="companion-service-naru" /><span className="person-avatar xl">{order.companion.nativeName.slice(0, 1)}</span><h2>{order.companion.name}</h2><div><MapPinIcon />{order.hospital?.name}</div></div><div className="service-main"><span>{t("timeRemaining")}</span><strong className="service-time">{formatDuration(remaining)}</strong><StatusPill tone={recording ? "red" : "peach"}><Mic size={15} />{recording ? t("recordingProtected") : t("browserCallNote")}</StatusPill>{remaining === 0 && <div role="alert" aria-live="assertive"><InfoBanner tone="peach" title={t("serviceTimeEnded")}>{t("serviceTimeEndedDesc")}</InfoBanner></div>}<div className="record-info"><ShieldCheck /><div><h3>{t("recordSaved")}</h3><p>{t("recordSavedDesc")}</p><p>{t("emergencyStill")}</p></div></div><div className="service-actions"><Button variant="secondary" onClick={extend}>{t("extend30")}</Button><Button variant="danger" onClick={end}>{t("endService")}</Button></div></div></Panel>;
+  return <Panel className="service-panel"><div className="service-person"><NaruPose pose={19} className="companion-service-naru" /><span className="person-avatar xl">{order.companion.nativeName.slice(0, 1)}</span><h2>{order.companion.name}</h2><div><MapPinIcon />{order.hospital?.name}</div></div><div className="service-main"><span>{t("timeRemaining")}</span><strong className="service-time">{formatDuration(remaining)}</strong><StatusPill tone={recording ? "red" : "peach"}><Mic size={15} />{recording ? t("recordingProtected") : t("browserCallNote")}</StatusPill>{remaining === 0 && <div role="alert" aria-live="assertive"><InfoBanner tone="peach" title={t("serviceTimeEnded")}>{t(canExtend ? "serviceTimeEndedDesc" : "serviceTimeEndedAtMaximumDesc")}</InfoBanner></div>}<div className="record-info"><ShieldCheck /><div><h3>{t("recordSaved")}</h3><p>{t("recordSavedDesc")}</p><p>{t("emergencyStill")}</p></div></div>{!canExtend && <p className="service-maximum" role="status">{t("serviceMaximumReached")}</p>}<div className="service-actions"><Button variant="secondary" onClick={extend} disabled={!canExtend}>{t("extend30")}</Button><Button variant="danger" onClick={end}>{t("endService")}</Button></div></div></Panel>;
 }
 
 function MapPinIcon() { return <span aria-hidden="true">✚</span>; }
@@ -195,7 +204,7 @@ export function CompanionFinishedPage({ order, onPayBalance, onReview }: { order
   const [rating, setRating] = useState(5);
   const [review, setReview] = useState("");
   const [balancePaid, setBalancePaid] = useState(false);
-  const finalMinutes = order.actualDurationMinutes || order.durationMinutes;
+  const finalMinutes = Math.min(MAX_COMPANION_SERVICE_MINUTES, Math.max(60, order.actualDurationMinutes || order.durationMinutes));
   const total = companionServiceTotal(order.companion.price, finalMinutes);
   function payBalance() { if (balancePaid) return; setBalancePaid(true); onPayBalance(); }
   return <Panel className="finished-panel"><div className="finished-success"><span>✓</span><h2>{t("serviceFinished")}</h2><p>{t("totalDuration", { hours: finalMinutes / 60 })}</p></div><div className="finished-details"><article><h3>{t("settlement")}</h3><dl><div><dt>{t("serviceTotal")}</dt><dd>₩{formatWon(total)}</dd></div><div><dt>{t("depositPaid")}</dt><dd>-₩{formatWon(order.deposit)}</dd></div><div><dt>{t("balanceDue")}</dt><dd>₩{formatWon(Math.max(0, total - order.deposit))}</dd></div></dl><Button onClick={payBalance} disabled={balancePaid}>{balancePaid ? t("confirm") : t("payBalance", { amount: formatWon(Math.max(0, total - order.deposit)) })}</Button></article><article className="rating-card"><h3>{t("rateCompanion", { name: order.companion.name })}</h3><div className="stars">{[1, 2, 3, 4, 5].map((value) => <button key={value} onClick={() => setRating(value)}><Star fill={value <= rating ? "currentColor" : "none"} /></button>)}</div><textarea value={review} onChange={(event) => setReview(event.target.value)} placeholder={t("reviewPlaceholder")} /><Button variant="mint" onClick={() => onReview(rating, review)}>{t("submitReview")}</Button></article></div></Panel>;

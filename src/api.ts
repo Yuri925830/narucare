@@ -240,6 +240,16 @@ export const api = {
     try { return (await request<{ orders: CompanionOrder[] }>("/api/orders")).orders; }
     catch { return []; }
   },
+  async deleteOrder(id: string) {
+    if (demoCurrentId()) {
+      const key = demoUserStorageKey(DEMO_ORDERS_KEY);
+      const orders = JSON.parse(localStorage.getItem(key) || "[]") as CompanionOrder[];
+      localStorage.setItem(key, JSON.stringify(orders.filter((order) => order.id !== id)));
+      return true;
+    }
+    try { await request<{ ok: boolean }>(`/api/orders/${encodeURIComponent(id)}`, { method: "DELETE" }); return true; }
+    catch { return false; }
+  },
   async uploadRecording(orderId: string, chunk: Blob, index: number) {
     if (demoCurrentId()) return { stored: false, local: true };
     try {

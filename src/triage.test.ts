@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { assessMedicalIntent, extractReportableSymptoms, hasMedicalSymptoms, isAffirmativeResponse, isHospitalCommandWithoutSymptoms, isMedicalKnowledgeQuestion, isNaruCapabilityQuestion, isNaruIdentityQuestion, isNegativeResponse } from "./triage";
+import { assessMedicalIntent, extractReportableSymptoms, hasMedicalSymptoms, isAffirmativeResponse, isHospitalCommandWithoutSymptoms, isMedicalKnowledgeQuestion, isNaruCapabilityQuestion, isNaruIdentityQuestion, isNegativeResponse, isSymptomsResolvedStatement } from "./triage";
 
 describe("medical triage", () => {
   it.each([
@@ -67,6 +67,35 @@ describe("medical triage", () => {
 
   it.each(["暂时不用", "先不用", "no thanks", "아니요", "いいえ", "non", "لا"])("recognizes a short multilingual hospital-search decline: %s", (message) => {
     expect(isNegativeResponse(message)).toBe(true);
+  });
+
+  it.each([
+    "我又没事了",
+    "我已经好了",
+    "症状都消失了",
+    "我现在不疼了",
+    "I'm fine now",
+    "My symptoms are gone",
+    "이제 괜찮아졌어요",
+    "もう大丈夫です",
+  ])("recognizes an explicit symptom-recovery update: %s", (message) => {
+    expect(isSymptomsResolvedStatement(message)).toBe(true);
+    expect(extractReportableSymptoms(message)).toBe("");
+    expect(assessMedicalIntent(message).intent).toBe("general");
+  });
+
+  it.each([
+    "我还没好",
+    "我没有好转",
+    "症状还没有消失",
+    "我还是肚子疼",
+    "我没事了吗？",
+    "I'm not better",
+    "I still feel sick",
+    "아직 안 나았어요",
+    "まだ治っていない",
+  ])("does not clear symptoms for unresolved or questioning language: %s", (message) => {
+    expect(isSymptomsResolvedStatement(message)).toBe(false);
   });
 
   it.each(["可以根治吗", "好的睡眠有什么作用", "okay but what is insomnia?"])("does not mistake a longer question for hospital-search consent: %s", (message) => {

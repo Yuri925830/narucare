@@ -181,12 +181,32 @@ export function RecordsPage({ version = 0, onCountChange }: { version?: number; 
   </>;
 }
 
-export function CompanionOrdersPage({ version = 0, onResume }: { version?: number; onResume: (order: CompanionOrder) => void }) {
+export function CompanionOrdersPage({ version = 0, onResume, onDeleted, onCountChange }: { version?: number; onResume: (order: CompanionOrder) => void; onDeleted?: (id: string) => void; onCountChange?: (count: number) => void }) {
   const { t } = useI18n();
   const [orders, setOrders] = useState<CompanionOrder[]>([]);
   const [loading, setLoading] = useState(true);
-  useEffect(() => { setLoading(true); void api.orders().then(setOrders).finally(() => setLoading(false)); }, [version]);
+  const [deleteTarget, setDeleteTarget] = useState<CompanionOrder | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+  useEffect(() => { setLoading(true); void api.orders().then((items) => { setOrders(items); onCountChange?.(items.length); }).finally(() => setLoading(false)); }, [version, onCountChange]);
   const statusKeys = { requested: "orderRequested", accepted: "orderAccepted", deposit_paid: "orderDepositPaid", arrived: "orderArrived", in_service: "orderInService", completed: "orderCompleted", cancelled: "orderCancelled" } as const;
   const statusText = (status: CompanionOrder["status"]) => t(statusKeys[status]);
-  return <Panel className="orders-panel"><InfoBanner icon="shield" title={t("companionOrders")}>{t("ordersDesc")}</InfoBanner>{loading ? <p>{t("loading")}</p> : orders.length ? <div className="orders-list">{orders.map((order) => <article key={order.id}><span className="person-avatar">{order.companion.nativeName.slice(0, 1)}</span><div><h2>{order.companion.name}</h2><StatusPill tone={order.status === "cancelled" ? "red" : "mint"}>{statusText(order.status)}</StatusPill><p><MapPin size={15} />{order.hospital?.name || t("hospital")}</p><small><CalendarClock size={14} />{order.createdAt ? new Date(order.createdAt).toLocaleString() : t("todayAt", { time: "16:00" })} · {order.durationMinutes} min</small><strong>₩{formatWon(order.deposit)} · {order.paymentMethod || t("notLinked")}</strong></div>{!(["completed", "cancelled"] as string[]).includes(order.status) && <Button onClick={() => onResume(order)}>{t("resumeOrder")}</Button>}</article>)}</div> : <div className="empty-records"><NaruPose pose={7} /><h2>{t("noOrders")}</h2></div>}</Panel>;
+  async function permanentlyDelete() {
+    if (!deleteTarget || deleting) return;
+    setDeleting(true);
+    setDeleteError("");
+    const deleted = await api.deleteOrder(deleteTarget.id);
+    if (deleted) {
+      const next = orders.filter((order) => order.id !== deleteTarget.id);
+      setOrders(next);
+      onCountChange?.(next.length);
+      onDeleted?.(deleteTarget.id);
+      setDeleteTarget(null);
+    } else setDeleteError(t("errorGeneric"));
+    setDeleting(false);
+  }
+  return <>
+    <Panel className="orders-panel"><InfoBanner icon="shield" title={t("companionOrders")}>{t("ordersDesc")}</InfoBanner>{loading ? <p>{t("loading")}</p> : orders.length ? <div className="orders-list">{orders.map((order) => <article key={order.id}><span className="person-avatar">{order.companion.nativeName.slice(0, 1)}</span><div><h2>{order.companion.name}</h2><StatusPill tone={order.status === "cancelled" ? "red" : "mint"}>{statusText(order.status)}</StatusPill><p><MapPin size={15} />{order.hospital?.name || t("hospital")}</p><small><CalendarClock size={14} />{order.createdAt ? new Date(order.createdAt).toLocaleString() : t("todayAt", { time: "16:00" })} · {order.durationMinutes} min</small><strong>₩{formatWon(order.deposit)} · {order.paymentMethod || t("notLinked")}</strong></div><div className="order-manage-actions">{!(["completed", "cancelled"] as string[]).includes(order.status) && <Button onClick={() => onResume(order)}>{t("resumeOrder")}</Button>}<Button variant="ghost" onClick={() => { setDeleteError(""); setDeleteTarget(order); }}><Trash2 />{t("deleteOrder")}</Button></div></article>)}</div> : <div className="empty-records"><NaruPose pose={7} /><h2>{t("noOrders")}</h2></div>}</Panel>
+    {deleteTarget && <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={t("deleteOrder")}><div className="gate-modal delete-record-dialog"><Trash2 /><h2>{t("deleteOrder")}</h2><p>{t("deleteOrderConfirm", { name: deleteTarget.companion.name })}</p>{deleteError && <p className="form-error" role="alert">{deleteError}</p>}<div><Button variant="secondary" onClick={() => setDeleteTarget(null)} disabled={deleting}>{t("cancel")}</Button><Button variant="danger" onClick={() => void permanentlyDelete()} disabled={deleting}>{deleting ? t("deleting") : t("deletePermanently")}</Button></div></div></div>}
+  </>;
 }

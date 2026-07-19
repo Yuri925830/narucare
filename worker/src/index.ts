@@ -21,6 +21,7 @@ const PASSWORD_ITERATIONS = 100_000;
 const MAX_JSON_BYTES = 100_000;
 const MAX_RECORDING_CHUNK = 5_000_000;
 const MAX_TRANSCRIPTION_AUDIO = 10_000_000;
+const MAX_COMPANION_SERVICE_MINUTES = 12 * 60;
 
 type JsonObject = Record<string, unknown>;
 
@@ -1120,6 +1121,8 @@ async function chat(request: Request, env: Env) {
 
 Always analyze the complete conversation, including what you previously said, rather than treating the latest sentence in isolation. Reply naturally in the language represented by locale ${locale}. Handle simple greetings, identity questions, everyday conversation, and follow-up questions naturally. Do not claim that you cannot understand a clear, ordinary message in the user's selected language.
 
+Speak like a caring, attentive human companion: acknowledge the user's feelings, use warm and natural wording, and avoid robotic or bureaucratic phrasing. In ordinary conversation and non-emergency medical education, include one to three context-appropriate emoji such as 💙, 🌿, 🩺, or 😊; do not put an emoji in every sentence, repeat them excessively, or sound childish. If the situation may be an emergency, switch immediately to a calm, serious, concise tone: do not use cheerful emoji, and use at most a single 🚨 only when it improves clarity.
+
 Classify the user's current purpose precisely:
 - general: casual conversation, identity, capabilities, thanks, or non-medical chat. Give a natural, useful reply.
 - education: a general medical knowledge question about a condition, cause, prevention, medicine, expected effect, side effect, dependency, or treatment concept when the user is not describing symptoms currently happening to them. Give a clear educational answer. For every medicine question, explicitly say not to start, stop, or change a prescription medicine without a clinician or pharmacist; do not give personalized dosing, and mention appropriate warning signs when relevant.
@@ -1209,9 +1212,9 @@ async function updateOrder(request: Request, env: Env, orderId: string) {
   const review = typeof body.review === "string" ? body.review.trim().slice(0, 2_000) : "";
   const balancePaid = body.balancePaid === true ? 1 : 0;
   const durationValue = body.durationMinutes === undefined ? null : Number(body.durationMinutes);
-  const durationMinutes = durationValue === null || !Number.isFinite(durationValue) ? null : Math.max(60, Math.min(1_440, Math.round(durationValue / 30) * 30));
+  const durationMinutes = durationValue === null || !Number.isFinite(durationValue) ? null : Math.max(60, Math.min(MAX_COMPANION_SERVICE_MINUTES, Math.round(durationValue / 30) * 30));
   const actualValue = body.actualDurationMinutes === undefined ? null : Number(body.actualDurationMinutes);
-  const actualDurationMinutes = actualValue === null || !Number.isFinite(actualValue) ? null : Math.max(60, Math.min(1_440, Math.ceil(actualValue)));
+  const actualDurationMinutes = actualValue === null || !Number.isFinite(actualValue) ? null : Math.max(60, Math.min(MAX_COMPANION_SERVICE_MINUTES, Math.ceil(actualValue)));
   const serviceStartedAt = typeof body.serviceStartedAt === "string" && !Number.isNaN(Date.parse(body.serviceStartedAt)) ? body.serviceStartedAt : "";
   const result = await env.DB.prepare("UPDATE companion_orders SET status=?,payment_method=CASE WHEN ?='' THEN payment_method ELSE ? END,rating=CASE WHEN ? IS NULL THEN rating ELSE ? END,review=CASE WHEN ?='' THEN review ELSE ? END,balance_paid=CASE WHEN ?=1 THEN 1 ELSE balance_paid END,duration_minutes=CASE WHEN ? IS NULL THEN duration_minutes ELSE ? END,actual_duration_minutes=CASE WHEN ? IS NULL THEN actual_duration_minutes ELSE ? END,service_started_at=CASE WHEN ?='' THEN service_started_at ELSE ? END,updated_at=CURRENT_TIMESTAMP WHERE id=? AND user_id=?").bind(status, paymentMethod, paymentMethod, rating, rating, review, review, balancePaid, durationMinutes, durationMinutes, actualDurationMinutes, actualDurationMinutes, serviceStartedAt, serviceStartedAt, orderId, userId).run();
   if (!result.meta.changes) throw new ApiException(404, "order_not_found", "Order not found");
@@ -1259,6 +1262,19 @@ async function listOrders(request: Request, env: Env) {
     LIMIT 100
   `).bind(userId).all<CompanionOrderRow>();
   return json({ orders: result.results.map(toCompanionOrder) });
+}
+
+async function deleteOrder(request: Request, env: Env, orderId: string) {
+  const userId = await requireUser(request, env);
+  const order = await env.DB.prepare("SELECT id FROM companion_orders WHERE id=? AND user_id=? LIMIT 1").bind(orderId, userId).first<{ id: string }>();
+  if (!order) throw new ApiException(404, "order_not_found", "Order not found");
+  const chunks = await env.DB.prepare("SELECT object_key FROM recording_chunks WHERE order_id=?").bind(orderId).all<{ object_key: string }>();
+  const keys = chunks.results.map((chunk) => chunk.object_key);
+  for (let index = 0; index < keys.length; index += 1_000) await env.RECORDINGS.delete(keys.slice(index, index + 1_000));
+  await env.DB.prepare("DELETE FROM recording_chunks WHERE order_id=?").bind(orderId).run();
+  const result = await env.DB.prepare("DELETE FROM companion_orders WHERE id=? AND user_id=?").bind(orderId, userId).run();
+  if (!result.meta.changes) throw new ApiException(404, "order_not_found", "Order not found");
+  return json({ ok: true, recordingsDeleted: keys.length });
 }
 
 async function uploadRecording(request: Request, env: Env, orderId: string, index: number) {
@@ -1380,6 +1396,7 @@ async function routeRequest(request: Request, env: Env, ctx: ExecutionContext) {
   if (request.method === "GET" && path === "/api/orders") return listOrders(request, env);
   const orderMatch = path.match(/^\/api\/orders\/([^/]+)$/);
   if (request.method === "PATCH" && orderMatch) return updateOrder(request, env, decodeURIComponent(orderMatch[1]));
+  if (request.method === "DELETE" && orderMatch) return deleteOrder(request, env, decodeURIComponent(orderMatch[1]));
   const recordingMatch = path.match(/^\/api\/orders\/([^/]+)\/recordings\/(\d+)$/);
   if (request.method === "PUT" && recordingMatch) return uploadRecording(request, env, decodeURIComponent(recordingMatch[1]), Number(recordingMatch[2]));
   if (request.method === "POST" && path === "/api/records") return createRecord(request, env);
