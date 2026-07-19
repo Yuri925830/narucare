@@ -74,6 +74,12 @@ describe("medical triage", () => {
     "我已经好了",
     "症状都消失了",
     "我现在不疼了",
+    "没事了",
+    "我肚子不疼了",
+    "我的肚子已经不疼了",
+    "头已经不痛了",
+    "我已经不吐也不拉了",
+    "好吧，我肚子不疼了",
     "I'm fine now",
     "My symptoms are gone",
     "이제 괜찮아졌어요",
@@ -81,7 +87,7 @@ describe("medical triage", () => {
   ])("recognizes an explicit symptom-recovery update: %s", (message) => {
     expect(isSymptomsResolvedStatement(message)).toBe(true);
     expect(extractReportableSymptoms(message)).toBe("");
-    expect(assessMedicalIntent(message).intent).toBe("general");
+    expect(assessMedicalIntent(message).intent).toBe("recovery");
   });
 
   it.each([
@@ -95,6 +101,14 @@ describe("medical triage", () => {
     "아직 안 나았어요",
     "まだ治っていない",
   ])("does not clear symptoms for unresolved or questioning language: %s", (message) => {
+    expect(isSymptomsResolvedStatement(message)).toBe(false);
+  });
+
+  it.each([
+    "肚子不疼了但还在吐",
+    "我不发烧了，不过仍然咳嗽",
+    "不是不疼，是更疼了",
+  ])("does not erase remaining active symptoms after partial or contradicted recovery: %s", (message) => {
     expect(isSymptomsResolvedStatement(message)).toBe(false);
   });
 

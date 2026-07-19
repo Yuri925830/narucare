@@ -1,9 +1,11 @@
-export type MedicalIntent = "emergency" | "hospital" | "card" | "flow" | "translation" | "companion" | "education" | "general";
+export type MedicalIntent = "emergency" | "hospital" | "recovery" | "card" | "flow" | "translation" | "companion" | "education" | "general";
+
+export type SymptomStatus = "none" | "new" | "ongoing" | "improving" | "resolved" | "unknown";
 
 export interface MedicalTriageResult {
   intent: MedicalIntent;
   symptoms: string;
-  reason: "red_flag" | "symptoms" | "hospital_request" | "card_request" | "service_request" | "education_request" | "none";
+  reason: "red_flag" | "symptoms" | "recovery_update" | "hospital_request" | "card_request" | "service_request" | "education_request" | "none";
 }
 
 const CARD_REQUEST = /(就诊卡|診療カード|진료카드|medical\s*card|create\s*(?:a\s*)?card|建卡|建立.*卡)/iu;
@@ -94,7 +96,15 @@ export function isNegativeResponse(value: string) {
 export function isSymptomsResolvedStatement(value: string) {
   const clean = normalize(value);
   if (!clean || /[?？]/u.test(clean) || UNRESOLVED_SYMPTOMS.test(clean)) return false;
-  return RESOLVED_SYMPTOMS.test(clean);
+  // Do not erase the whole symptom state when only one complaint improved but
+  // another active complaint remains (for example: “肚子不疼了，但还在吐”).
+  const hasRemainingComplaint = /(?:但|但是|可是|不过|只是|然而|可我|but|however|still|yet|그런데|하지만|아직).{0,24}(?:还|仍|依然|继续|still|아직)?\s*(?:疼|痛|难受|吐|呕吐|拉肚子|腹泻|发烧|发热|咳嗽|头晕|恶心|出血|呼吸困难|hurt|pain|vomit|diarrh|fever|cough|dizz|nause|bleed|아프|통증|구토|설사|열|기침)/iu.test(clean);
+  if (hasRemainingComplaint) return false;
+  if (RESOLVED_SYMPTOMS.test(clean)) return true;
+  const chineseRecovery = /^(?:(?:好吧|好的)[，,。\s]*)?(?:(?:我|我的|我现在|现在我|目前我|本人)(?:的)?\s*)?(?:(?:肚子|肚|胃|头|脑袋|胸|胸口|心口|喉咙|嗓子|腰|背|牙|腿|手|脚|眼睛|身体|症状|不舒服)\s*)?(?:(?:已经|现在|终于|完全|也)\s*)?(?:(?:不再|不|没再|没有再)\s*(?:怎么|那么|很|继续)?\s*(?:疼|痛|难受|吐|呕吐|拉肚子|腹泻|发烧|发热|咳嗽|头晕|恶心|出血|不舒服)|(?:不吐也不拉|不拉也不吐))(?:了|啦|咯)[。！!\s]*$/u;
+  const englishRecovery = /^(?:i(?:'m| am) (?:fine|okay|better) now|i (?:do not|don't|no longer) (?:hurt|feel sick)|it (?:does not|doesn't) hurt anymore|my .{0,20} (?:pain|symptom)s? (?:is|are) gone)[.!\s]*$/iu;
+  const koreanRecovery = /^(?:이제\s*)?(?:저는?\s*)?(?:배|머리|가슴|목|허리|몸)?(?:가|이|은|는)?\s*(?:더 이상\s*)?(?:아프지 않|안 아프|괜찮아졌|증상이 없어졌|회복했)(?:어요|습니다|어|다)?[.!\s]*$/u;
+  return chineseRecovery.test(clean) || englishRecovery.test(clean) || koreanRecovery.test(clean);
 }
 
 function symptomSummary(current: string, previous: string[]) {
@@ -133,7 +143,7 @@ export function isHospitalCommandWithoutSymptoms(value: string) {
 export function assessMedicalIntent(message: string, previousUserMessages: string[] = [], hasCard = true): MedicalTriageResult {
   const current = normalize(message);
   if (!current) return { intent: "general", symptoms: "", reason: "none" };
-  if (isSymptomsResolvedStatement(current)) return { intent: "general", symptoms: "", reason: "none" };
+  if (isSymptomsResolvedStatement(current)) return { intent: "recovery", symptoms: "", reason: "recovery_update" };
   if (CARD_REQUEST.test(current)) return { intent: "card", symptoms: "", reason: "card_request" };
 
   const asksForKnowledge = isMedicalKnowledgeQuestion(current);

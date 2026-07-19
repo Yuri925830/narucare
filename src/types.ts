@@ -53,6 +53,20 @@ export interface ChatHistoryEntry {
   content: string;
 }
 
+export interface MedicalEvidenceSource {
+  title: string;
+  url: string;
+  year?: string;
+}
+
+export interface ChatResponse {
+  reply: string;
+  intent: "emergency" | "hospital" | "recovery" | "card" | "flow" | "translation" | "companion" | "education" | "general";
+  symptoms?: string;
+  symptomStatus?: "none" | "new" | "ongoing" | "improving" | "resolved" | "unknown";
+  sources?: MedicalEvidenceSource[];
+}
+
 export interface Hospital {
   id: string;
   name: string;

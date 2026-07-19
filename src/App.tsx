@@ -400,6 +400,7 @@ function AppInner() {
     setViewHistory(destination === "agent" ? [] : ["agent"]);
     setVisitedViews(destination === "agent" ? ["agent"] : ["agent", destination]);
     setView(destination);
+    await api.clearChatHistory();
 
     const card = user?.card;
     if (card && (card.symptoms || card.korean?.symptoms)) {

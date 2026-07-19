@@ -1,12 +1,13 @@
 import { companions, fallbackHospitals, matchCompanions } from "./data";
 import { assessMedicalIntent } from "./triage";
-import type { ChatHistoryEntry, Companion, CompanionFilters, CompanionOrder, Hospital, MedicalCard, SessionUser, TranslationRecordEntry, VisitRecord } from "./types";
+import type { ChatHistoryEntry, ChatResponse, Companion, CompanionFilters, CompanionOrder, Hospital, MedicalCard, SessionUser, TranslationRecordEntry, VisitRecord } from "./types";
 
 const API_BASE = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
 const TOKEN_KEY = "narucare-session";
 const DEMO_USERS_KEY = "narucare-demo-users";
 const DEMO_RECORDS_KEY = "narucare-demo-records";
 const DEMO_ORDERS_KEY = "narucare-demo-orders";
+const DEMO_CHAT_KEY = "narucare-demo-chat";
 
 interface ApiErrorPayload { error?: string; message?: string }
 
@@ -185,17 +186,44 @@ export const api = {
     }, 45_000);
     return data.text.trim();
   },
-  async chat(message: string, locale: string, hasCard: boolean, history: ChatHistoryEntry[] = []) {
+  async chat(message: string, locale: string, hasCard: boolean, history: ChatHistoryEntry[] = []): Promise<ChatResponse> {
     const previousUserMessages = history.filter((entry) => entry.role === "user").map((entry) => entry.content);
     const local = assessMedicalIntent(message, previousUserMessages, hasCard);
-    if (local.intent !== "general" && local.intent !== "education") return { reply: "", intent: local.intent, symptoms: local.symptoms };
+    const deterministicAction = local.intent === "emergency" || local.intent === "recovery" || local.reason === "hospital_request" || local.reason === "card_request" || local.reason === "service_request";
+    if (deterministicAction) return { reply: "", intent: local.intent, symptoms: local.symptoms, symptomStatus: local.intent === "recovery" ? "resolved" : local.symptoms ? "ongoing" : "none" };
     try {
-      return await request<{ reply: string; intent: "emergency" | "hospital" | "card" | "flow" | "translation" | "companion" | "education" | "general"; symptoms?: string }>("/api/chat", {
-        method: "POST", body: JSON.stringify({ message, locale, hasCard, history: history.slice(-10) }),
-      });
+      return await request<ChatResponse>("/api/chat", { method: "POST", body: JSON.stringify({ message, locale, hasCard, history: history.slice(-30) }) }, 70_000);
     } catch {
-      return { reply: "", intent: local.intent, symptoms: local.symptoms };
+      return { reply: "", intent: local.intent, symptoms: local.symptoms, symptomStatus: "unknown" };
     }
+  },
+  async chatHistory(): Promise<ChatHistoryEntry[]> {
+    if (demoCurrentId()) {
+      try { return JSON.parse(localStorage.getItem(demoUserStorageKey(DEMO_CHAT_KEY)) || "[]") as ChatHistoryEntry[]; }
+      catch { return []; }
+    }
+    try { return (await request<{ history: ChatHistoryEntry[] }>("/api/chat/history")).history; }
+    catch { return []; }
+  },
+  async rememberChat(user: string, assistant: string, intent = "general") {
+    if (demoCurrentId()) {
+      const key = demoUserStorageKey(DEMO_CHAT_KEY);
+      let history: ChatHistoryEntry[] = [];
+      try { history = JSON.parse(localStorage.getItem(key) || "[]") as ChatHistoryEntry[]; } catch { /* Start a clean demo history. */ }
+      const next = [...history, { role: "user" as const, content: user }, ...(assistant ? [{ role: "assistant" as const, content: assistant }] : [])].slice(-80);
+      localStorage.setItem(key, JSON.stringify(next));
+      return true;
+    }
+    try { await request<{ ok: boolean }>("/api/chat/memory", { method: "POST", body: JSON.stringify({ user, assistant, intent }) }); return true; }
+    catch { return false; }
+  },
+  async clearChatHistory() {
+    if (demoCurrentId()) {
+      localStorage.removeItem(demoUserStorageKey(DEMO_CHAT_KEY));
+      return true;
+    }
+    try { await request<{ ok: boolean }>("/api/chat/history", { method: "DELETE" }); return true; }
+    catch { return false; }
   },
   async getCompanions(filters: CompanionFilters): Promise<Companion[]> {
     try {

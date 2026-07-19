@@ -2,12 +2,12 @@
   "$schema": "../node_modules/wrangler/config-schema.json",
   "name": "narucare-api",
   "main": "src/index.ts",
-  "compatibility_date": "2026-07-18",
+  "compatibility_date": "2026-07-19",
   "compatibility_flags": ["nodejs_compat"],
   "vars": {
     "ALLOWED_ORIGINS": "http://localhost:5173,http://127.0.0.1:5173",
     "ALLOW_GITHUB_PAGES": "true",
-    "AI_MODEL": "@cf/meta/llama-3.1-8b-instruct-fast"
+    "AI_MODEL": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
   },
   "d1_databases": [
     {

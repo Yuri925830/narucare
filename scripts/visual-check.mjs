@@ -85,7 +85,7 @@ async function assertChatDocked(label) {
     if (!nav || composer.y + composer.height > nav.y - 4) throw new Error(`${label}: composer overlaps the mobile bottom navigation`);
   }
 }
-async function assertUniversalWelcome(label) {
+async function assertUniversalWelcome(label, expectAtTop = true) {
   const welcome = page.locator(".message-naru").first();
   const text = await welcome.innerText();
   for (const expected of [
@@ -103,7 +103,7 @@ async function assertUniversalWelcome(label) {
   if (await welcome.locator(".welcome-message h2").count() !== 2 || await welcome.locator(".welcome-message h3").count() !== 7) {
     throw new Error(`${label}: welcome hierarchy was not rendered as structured rich text`);
   }
-  if (await page.locator(".messages").evaluate((element) => element.scrollTop) > 2) throw new Error(`${label}: the long welcome opened at the bottom instead of its first line`);
+  if (expectAtTop && await page.locator(".messages").evaluate((element) => element.scrollTop) > 2) throw new Error(`${label}: the long welcome opened at the bottom instead of its first line`);
 }
 page.on("pageerror", (error) => errors.push(error.stack || error.message));
 page.on("console", (message) => { if (message.type() === "error" && !message.text().includes("ERR_FAILED")) errors.push(message.text()); });
@@ -194,7 +194,8 @@ await page.locator(".agent-grid").waitFor();
 // Reload here to start an independent visit scenario for the hospital path.
 await page.reload({ waitUntil: "networkidle" });
 await page.locator(".agent-grid").waitFor();
-await assertUniversalWelcome("saved-card account after reload");
+await assertUniversalWelcome("saved-card account after reload", false);
+if (!/你是谁/.test(await page.locator(".messages").innerText())) throw new Error("The active conversation was not restored after reload");
 const hospitalRequestCount = hospitalRequestUrls.length;
 await page.locator(".chat-composer input").fill("附近医院");
 await page.locator(".chat-composer").evaluate((form) => form.requestSubmit());
